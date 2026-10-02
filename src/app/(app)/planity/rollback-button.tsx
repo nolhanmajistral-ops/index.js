@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { rollbackAction } from "./actions";
 
 export function RollbackButton({ batchId }: { batchId: string }) {
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
+  const router = useRouter();
   return (
     <span className="flex items-center gap-2">
       <button
@@ -13,7 +15,11 @@ export function RollbackButton({ batchId }: { batchId: string }) {
         disabled={pending}
         onClick={() => {
           if (!confirm("Annuler cet import ? Les rendez-vous, revenus et clients créés par cet import seront supprimés.")) return;
-          start(async () => setMsg((await rollbackAction(batchId)).message ?? null));
+          start(async () => {
+            const res = await rollbackAction(batchId);
+            if (res.ok) router.push(`/planity?rolledBack=${encodeURIComponent(res.message ?? "")}`);
+            else setMsg(res.message ?? "Erreur");
+          });
         }}
       >
         Annuler cet import

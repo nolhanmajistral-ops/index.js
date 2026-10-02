@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import type { ActionState } from "@/lib/actions";
+import { useRedirectOnSuccess } from "@/components/ui/use-redirect";
 import { Field, Select, TextArea, TextInput } from "@/components/ui/field";
 import { FormMessage, SubmitButton } from "@/components/ui/form";
 import { CONTENT_STATUS_LABEL, CONTENT_TYPE_LABEL, PLATFORM_LABEL, options } from "@/lib/labels";
@@ -22,6 +23,7 @@ export interface ContentDefaults {
 
 export function ContentForm({ action, defaults = {}, submitLabel }: { action: (p: ActionState, fd: FormData) => Promise<ActionState>; defaults?: ContentDefaults; submitLabel: string }) {
   const [state, formAction] = useActionState<ActionState, FormData>(action, {});
+  useRedirectOnSuccess(state);
   const e = state.fieldErrors ?? {};
   return (
     <form action={formAction} className="grid gap-4 sm:grid-cols-2">

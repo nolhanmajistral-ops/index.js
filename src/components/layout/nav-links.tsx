@@ -26,6 +26,7 @@ export function SidebarLinks() {
           <Link
             key={item.href}
             href={item.href}
+            prefetch={false}
             className={clsx(
               "group flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition",
               active ? "bg-ink-3 text-bone" : "text-mute hover:bg-ink-3/60 hover:text-bone",
@@ -51,7 +52,7 @@ export function BottomNav() {
         const Icon = ICONS[item.icon];
         const active = isActive(pathname, item.href);
         return (
-          <Link key={item.href} href={item.href} className={clsx("flex flex-col items-center gap-1 py-2.5 text-[10px]", active ? "text-bone" : "text-mute")}>
+          <Link key={item.href} href={item.href} prefetch={false} className={clsx("flex flex-col items-center gap-1 py-2.5 text-[10px]", active ? "text-bone" : "text-mute")}>
             <Icon size={19} className={active ? "text-gold" : undefined} />
             {item.label}
           </Link>
@@ -68,7 +69,7 @@ export function MobileMenu() {
       <summary className="btn-ghost cursor-pointer list-none px-3 py-1.5 text-xs">Menu</summary>
       <div className="absolute right-0 z-50 mt-2 w-56 rounded-2xl border border-line bg-ink-2 p-2 shadow-2xl">
         {NAV_ITEMS.map((item) => (
-          <Link key={item.href} href={item.href} className={clsx("block rounded-lg px-3 py-2 text-sm", isActive(pathname, item.href) ? "bg-ink-3 text-bone" : "text-soft")}>
+          <Link key={item.href} href={item.href} prefetch={false} className={clsx("block rounded-lg px-3 py-2 text-sm", isActive(pathname, item.href) ? "bg-ink-3 text-bone" : "text-soft")}>
             {item.label}
           </Link>
         ))}

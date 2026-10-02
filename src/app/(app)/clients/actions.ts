@@ -24,8 +24,7 @@ export async function createClientAction(_p: ActionState, fd: FormData): Promise
     return { ok: true };
   });
   if (!createdId) return res;
-  revalidatePath("/clients");
-  redirect(`/clients/${createdId}`);
+  return { ok: true, message: "Client ajouté.", redirectTo: `/clients/${createdId}` };
 }
 
 export async function updateClientAction(clientId: string, _p: ActionState, fd: FormData): Promise<ActionState> {

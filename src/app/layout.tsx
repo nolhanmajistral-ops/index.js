@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { HydrationMarker } from "@/components/hydration-marker";
 
 export const metadata: Metadata = {
   title: { default: "NOLHAN OS", template: "%s · NOLHAN OS" },
@@ -13,7 +14,10 @@ export const viewport: Viewport = { themeColor: "#0a0a0a", width: "device-width"
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr">
-      <body className="min-h-dvh font-sans">{children}</body>
+      <body className="min-h-dvh font-sans">
+        <HydrationMarker />
+        {children}
+      </body>
     </html>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import type { ActionState } from "@/lib/actions";
+import { useRedirectOnSuccess } from "@/components/ui/use-redirect";
 import { Field, Select, TextArea, TextInput } from "@/components/ui/field";
 import { FormMessage, SubmitButton } from "@/components/ui/form";
 import { CHANNEL_LABEL, options } from "@/lib/labels";
@@ -19,6 +20,7 @@ export interface ClientDefaults {
 
 export function ClientForm({ action, defaults = {}, contents, submitLabel }: { action: (p: ActionState, fd: FormData) => Promise<ActionState>; defaults?: ClientDefaults; contents: { id: string; title: string }[]; submitLabel: string }) {
   const [state, formAction] = useActionState<ActionState, FormData>(action, {});
+  useRedirectOnSuccess(state);
   const e = state.fieldErrors ?? {};
   return (
     <form action={formAction} className="grid gap-4 sm:grid-cols-2">

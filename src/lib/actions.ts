@@ -8,6 +8,8 @@ export interface ActionState {
   ok?: boolean;
   message?: string;
   fieldErrors?: Record<string, string>;
+  /** Navigation effectuée côté client après succès (plus fiable qu'un redirect() dans une action de formulaire). */
+  redirectTo?: string;
 }
 
 export const fieldErrors = (e: ZodError) => Object.fromEntries(e.issues.map((i) => [String(i.path[0] ?? "form"), i.message]));

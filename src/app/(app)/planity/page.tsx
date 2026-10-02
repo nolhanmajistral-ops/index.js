@@ -12,7 +12,8 @@ export const metadata = { title: "Planity" };
 
 const STATUS: Record<string, { label: string; tone: "ok" | "warn" | "bad" | "neutral" }> = { COMPLETED: { label: "Terminé", tone: "ok" }, ROLLED_BACK: { label: "Annulé", tone: "neutral" }, FAILED: { label: "Échec", tone: "bad" }, PROCESSING: { label: "En cours", tone: "warn" } };
 
-export default async function PlanityPage() {
+export default async function PlanityPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const sp = await searchParams;
   const user = await requireOnboardedUser();
   const [batches, jobs] = await Promise.all([listImportBatches(user.id), listSyncJobs(user.id, "PLANITY", 10)]);
   const planityBatches = batches.filter((b) => b.provider === "PLANITY");
@@ -20,6 +21,7 @@ export default async function PlanityPage() {
   return (
     <div>
       <PageHeader title="Planity" subtitle="Import des exports CSV/XLSX. Planity ne fournit pas d'API publique : aucune synchronisation automatique n'est simulée." action={<ConnectionBadge status={connected ? "CONNECTED_IMPORT" : "CONFIGURATION_REQUIRED"} />} />
+      {sp.rolledBack ? <p role="status" className="mb-4 rounded-lg bg-ok/10 px-3 py-2 text-sm text-ok">{sp.rolledBack.slice(0, 200)}</p> : null}
       <Card><ImportWizard /></Card>
       <p className="mt-2 text-xs text-mute">Fichiers de test : <code>docs/samples/planity-sample.csv</code> et <code>.xlsx</code> (données fictives). Taille max configurable (IMPORT_MAX_FILE_MB).</p>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import clsx from "clsx";
 import { Badge } from "@/components/ui/badge";
 
@@ -24,6 +24,8 @@ const chf = (c: number) => `${new Intl.NumberFormat("fr-CH").format(c / 100)} CH
 
 export function ImportWizard() {
   const [file, setFile] = useState<File | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const currentFile = () => file ?? inputRef.current?.files?.[0] ?? null;
   const [info, setInfo] = useState<Inspect | null>(null);
   const [mapping, setMapping] = useState<Mapping>({});
   const [report, setReport] = useState<Report | null>(null);
@@ -32,9 +34,14 @@ export function ImportWizard() {
   const step = report ? 3 : info ? 2 : 1;
 
   async function call(url: string, m?: Mapping) {
-    if (!file) return null;
+    const f = currentFile();
+    if (!f) {
+      setError("Choisis un fichier .csv ou .xlsx.");
+      return null;
+    }
+    if (f !== file) setFile(f);
     const fd = new FormData();
-    fd.append("file", file);
+    fd.append("file", f);
     if (m) fd.append("mapping", JSON.stringify(m));
     setBusy(true);
     setError(null);
@@ -81,10 +88,10 @@ export function ImportWizard() {
       {step === 1 ? (
         <div className="space-y-3">
           <label className="block rounded-2xl border border-dashed border-line-2 p-6 text-center text-sm text-mute hover:border-mute">
-            <input type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="sr-only" aria-label="Fichier Planity" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            <input ref={inputRef} type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="sr-only" aria-label="Fichier Planity" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
             {file ? <span className="text-bone">{file.name} · {(file.size / 1024).toFixed(0)} Ko</span> : "Choisir un export Planity (.csv ou .xlsx)"}
           </label>
-          <button className="btn-primary" disabled={!file || busy} onClick={() => inspect()}>{busy ? "Analyse…" : "Analyser le fichier"}</button>
+          <button className="btn-primary" disabled={busy} onClick={() => inspect()}>{busy ? "Analyse…" : "Analyser le fichier"}</button>
         </div>
       ) : null}
 

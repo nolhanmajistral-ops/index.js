@@ -22,7 +22,7 @@ export async function createContentAction(_p: ActionState, fd: FormData): Promis
   });
   if (!newId) return res;
   revalidatePath("/contents");
-  redirect(`/contents/${newId}`);
+  return { ok: true, message: "Contenu créé.", redirectTo: `/contents/${newId}` };
 }
 
 export async function updateContentAction(contentId: string, _p: ActionState, fd: FormData): Promise<ActionState> {

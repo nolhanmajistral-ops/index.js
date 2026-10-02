@@ -1,13 +1,14 @@
 import clsx from "clsx";
 
+/** Libellé associé par htmlFor (nom accessible = libellé seul, jamais le contenu du contrôle). */
 export function Field({ label, name, error, hint, className, children }: { label: string; name?: string; error?: string; hint?: string; className?: string; children?: React.ReactNode }) {
   return (
-    <label className={clsx("block space-y-1.5", className)} htmlFor={name}>
-      <span className="label block">{label}</span>
+    <div className={clsx("block space-y-1.5", className)}>
+      <label className="label block" htmlFor={name}>{label}</label>
       {children}
       {hint ? <span className="block text-xs text-mute">{hint}</span> : null}
-      {error ? <span className="block text-xs text-bad">{error}</span> : null}
-    </label>
+      {error ? <span role="alert" className="block text-xs text-bad">{error}</span> : null}
+    </div>
   );
 }
 
