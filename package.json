@@ -2,7 +2,7 @@
   "name": "nolhan-os",
   "version": "0.1.0",
   "private": true,
-  "description": "NOLHAN OS \u2014 syst\u00e8me de pilotage business, contenu et clients pour Nolhan Yildirim (Barber, Lausanne)",
+  "description": "NOLHAN OS — système de pilotage business, contenu et clients pour Nolhan Yildirim (Barber, Lausanne)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -20,6 +20,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
     "@prisma/client": "^6.19.3",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
