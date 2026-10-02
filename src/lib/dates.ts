@@ -119,3 +119,24 @@ export function formatDateTimeFr(d: Date | null | undefined, tz = DEFAULT_TZ): s
   if (!d) return "—";
   return new Intl.DateTimeFormat("fr-CH", { timeZone: tz, day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(d);
 }
+
+/** Libellé court jj.mm dans le fuseau du salon (utilisé pour les axes de graphiques). */
+export function shortDayLabel(d: Date, tz = DEFAULT_TZ): string {
+  return new Intl.DateTimeFormat("fr-CH", { timeZone: tz, day: "2-digit", month: "2-digit" }).format(d);
+}
+
+/** "YYYY-MM-DDTHH:mm" (ou "YYYY-MM-DD") saisi dans un <input> → instant UTC, interprété dans le fuseau du salon. */
+export function fromLocalInput(value: string, tz = DEFAULT_TZ): Date | null {
+  const m = value.trim().match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/);
+  if (!m) return null;
+  const base = zonedMidnight(+m[1]!, +m[2]!, +m[3]!, tz);
+  return new Date(base.getTime() + ((m[4] ? +m[4] : 0) * 60 + (m[5] ? +m[5] : 0)) * 60_000);
+}
+
+/** Instant → valeur pour <input type="datetime-local"> dans le fuseau du salon. */
+export function toLocalInput(d: Date | null | undefined, tz = DEFAULT_TZ): string {
+  if (!d) return "";
+  const f = new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const p = Object.fromEntries(f.formatToParts(d).map((x) => [x.type, x.value]));
+  return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;
+}

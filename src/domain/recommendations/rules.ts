@@ -96,7 +96,7 @@ export const RULES: Rule[] = [
       ruleCode: "PUBLISH_BEST_FORMAT", title: `Publier une ${fmt.toLowerCase()}`,
       action: `Publie aujourd'hui une vidéo au format « ${fmt} »${best ? " — ton format le plus performant" : ""}, avec un hook dans les 2 premières secondes et un CTA vers Planity.`,
       why: [
-        daysSince === null ? "Aucun contenu publié enregistré." : `Dernière publication il y a ${Math.floor(daysSince)} jour(s).`,
+        daysSince === null ? "Aucun contenu publié enregistré." : Math.floor(daysSince) === 0 ? "Dernière publication aujourd'hui." : `Dernière publication il y a ${Math.floor(daysSince)} jour(s).`,
         goal && goal.actual !== null ? `Vidéos cette semaine : ${goal.actual}/${goal.target}.` : "",
         best ? `Le format ${fmt} a le meilleur score moyen (${Math.round(best.avgOverall ?? 0)}/100 sur ${best.count} contenus).` : "Pas encore assez de contenus mesurés pour désigner un meilleur format : Transformation est proposé par défaut (hypothèse).",
       ].filter(Boolean).join(" "),

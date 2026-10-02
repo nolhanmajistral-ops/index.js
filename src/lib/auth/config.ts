@@ -1,7 +1,7 @@
 import type { NextAuthConfig } from "next-auth";
 
 /** Configuration Auth.js compatible edge (middleware) : aucun accès DB ici. */
-const PUBLIC_PATHS = ["/login", "/register", "/api/auth", "/privacy"];
+const PUBLIC_PATHS = ["/login", "/register", "/api/auth", "/api/health", "/privacy"];
 
 export const authConfig = {
   pages: { signIn: "/login" },

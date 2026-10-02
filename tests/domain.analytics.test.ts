@@ -30,6 +30,11 @@ describe("scores de contenu explicables", () => {
     expect(onlyLeads.get(cs[2]!.id)!.acquisition.score).toBe(0);
     expect(overallScore(top)).toBeGreaterThan(overallScore(scores.get(cs[2]!.id)!)!);
   });
+  it("un ex æquo à zéro n'obtient jamais un score « moyen » trompeur", () => {
+    const cs = [content({ views: 100 }), content({ views: 200 }), content({ views: 300 }), content({ views: 400 })];
+    const scores = computeContentScores(cs, { social: [], clients: [], attributions: [], revenues: [] });
+    expect(scores.get(cs[0]!.id)!.business.score).toBe(0);
+  });
   it("business : clients et CA attribués via le contenu d'origine", () => {
     const cs = [content({ views: 100 }), content({ views: 200 }), content({ views: 300 })];
     const ds = withAppointments([appt("k1", "2026-09-25T08:00:00Z", "Coupe", 4000)]);

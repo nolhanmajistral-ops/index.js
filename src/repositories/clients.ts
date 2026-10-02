@@ -213,3 +213,22 @@ export async function mergeClients(userId: string, keepId: string, mergeId: stri
 export function countClients(userId: string) {
   return prisma.client.count({ where: { userId, mergedIntoId: null } });
 }
+
+/** Visites réalisées par client (une seule requête groupée, pas de N+1). */
+export async function visitStatsFor(userId: string, clientIds: string[]) {
+  if (!clientIds.length) return new Map<string, { visits: number; lastVisit: Date | null; revenueCents: number }>();
+  const [visits, revenue] = await Promise.all([
+    prisma.appointment.groupBy({ by: ["clientId"], where: { userId, clientId: { in: clientIds }, status: "COMPLETED" }, _count: { _all: true }, _max: { startsAt: true } }),
+    prisma.revenue.groupBy({ by: ["clientId"], where: { userId, clientId: { in: clientIds }, reviewStatus: "OK" }, _sum: { amountCents: true } }),
+  ]);
+  const rev = new Map(revenue.map((r) => [r.clientId, r._sum.amountCents ?? 0]));
+  return new Map(visits.map((v) => [v.clientId as string, { visits: v._count._all, lastVisit: v._max.startsAt, revenueCents: rev.get(v.clientId) ?? 0 }]));
+}
+
+export function clientNames(userId: string, ids: string[]) {
+  return prisma.client.findMany({ where: { userId, id: { in: ids } }, select: { id: true, displayName: true } });
+}
+
+export function clientOptions(userId: string) {
+  return prisma.client.findMany({ where: { userId, mergedIntoId: null }, select: { id: true, displayName: true }, orderBy: { displayName: "asc" }, take: 1000 });
+}

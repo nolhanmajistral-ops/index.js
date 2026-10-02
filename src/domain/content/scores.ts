@@ -87,11 +87,11 @@ function followersAt(social: SocialMetricRow[], platform: string, at: Date): num
   return best?.followers ?? null;
 }
 
+/** Part (0-100) des AUTRES contenus strictement inférieurs : un ex æquo à zéro vaut 0, jamais « mieux que la moitié ». */
 function percentileRank(values: number[], v: number): number {
   if (values.length <= 1) return 50;
   const below = values.filter((x) => x < v).length;
-  const equal = values.filter((x) => x === v).length;
-  return Math.round(((below + (equal - 1) / 2) / (values.length - 1)) * 100);
+  return Math.round((below / (values.length - 1)) * 100);
 }
 
 function fmt(key: keyof RawFactors, v: number | null): string {

@@ -59,7 +59,7 @@ export async function loadDemoData(userId: string, now = new Date()) {
           const early = Object.fromEntries(Object.entries(c.metrics).map(([k, v]) => [k, Math.round(v * 0.55)]));
           await tx.contentMetric.createMany({
             data: [
-              { userId, contentId: row.id, capturedAt: new Date(Math.min(now.getTime(), c.publishedAt.getTime() + 86_400_000)), source: "DEMO", ...early },
+              { userId, contentId: row.id, capturedAt: new Date(Math.min(now.getTime() - 60_000, c.publishedAt.getTime() + 86_400_000)), source: "DEMO", ...early },
               { userId, contentId: row.id, capturedAt: new Date(Math.min(now.getTime(), c.publishedAt.getTime() + 5 * 86_400_000)), source: "DEMO", ...c.metrics },
             ],
           });

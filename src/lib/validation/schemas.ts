@@ -1,4 +1,9 @@
 import { z } from "zod";
+import { fromLocalInput } from "@/lib/dates";
+
+/** Date saisie dans un formulaire (fuseau Europe/Zurich). */
+const localDate = z.preprocess((v) => (typeof v === "string" ? fromLocalInput(v) ?? v : v), z.date({ invalid_type_error: "Date invalide" }));
+const optionalLocalDate = z.preprocess((v) => (v === "" || v == null ? undefined : typeof v === "string" ? fromLocalInput(v) ?? v : v), z.date({ invalid_type_error: "Date invalide" }).optional());
 
 /** Schémas Zod partagés (validation serveur systématique — jamais de confiance au frontend). */
 const trimmed = (max: number) => z.string().trim().max(max);
@@ -69,8 +74,8 @@ export const contentSchema = z.object({
   durationSec: optionalInt,
   url: z.preprocess((v) => (typeof v === "string" && v.trim() === "" ? undefined : v), z.string().trim().url("URL invalide").max(500).optional()),
   notes: optionalTrimmed(3000),
-  publishedAt: z.preprocess((v) => (v === "" || v == null ? undefined : v), z.coerce.date().optional()),
-  plannedAt: z.preprocess((v) => (v === "" || v == null ? undefined : v), z.coerce.date().optional()),
+  publishedAt: optionalLocalDate,
+  plannedAt: optionalLocalDate,
 });
 
 export const contentMetricSchema = z.object({
@@ -87,7 +92,7 @@ export const contentMetricSchema = z.object({
 
 export const socialSnapshotSchema = z.object({
   platform: z.enum(platforms),
-  capturedAt: z.coerce.date().refine((d) => d.getTime() <= Date.now() + 60_000, "La date ne peut pas être dans le futur"),
+  capturedAt: localDate.refine((d) => d.getTime() <= Date.now() + 60_000, "La date ne peut pas être dans le futur"),
   followers: optionalInt,
   views: optionalInt,
   likes: optionalInt,
@@ -97,7 +102,7 @@ export const socialSnapshotSchema = z.object({
 
 export const manualRevenueSchema = z.object({
   amount: chf.refine((v) => v > 0, "Montant requis"),
-  occurredAt: z.coerce.date(),
+  occurredAt: localDate,
   serviceId: optionalTrimmed(40),
   clientId: optionalTrimmed(40),
   kind: z.enum(["SERVICE", "PRODUCT", "TIP", "OTHER"]).default("SERVICE"),
@@ -107,7 +112,7 @@ export const manualRevenueSchema = z.object({
 export const appointmentSchema = z.object({
   clientId: optionalTrimmed(40),
   serviceId: trimmed(40).min(1, "Prestation requise"),
-  startsAt: z.coerce.date(),
+  startsAt: localDate,
   price: optionalChf,
   status: z.enum(["BOOKED", "COMPLETED", "CANCELLED", "NO_SHOW"]).default("COMPLETED"),
 });
@@ -132,7 +137,7 @@ export const missionUpdateSchema = z.object({
 export const experimentSchema = z.object({
   hypothesis: trimmed(500).min(5),
   action: trimmed(500).min(3),
-  startDate: z.coerce.date(),
+  startDate: localDate,
   durationDays: z.coerce.number().int().min(1).max(180),
   expectedResult: trimmed(500).min(3),
   metrics: z.array(z.enum(["views", "profileVisits", "leads", "newClients", "revenue", "followers"])).min(1),
