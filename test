@@ -1,0 +1,9 @@
+git clone https://github.com/nolhanmajistral-ops/index.js.git nolhan-os
+cd nolhan-os
+git checkout claude/nolhan-os-build-jzwvwq
+npm install
+cp .env.example .env    # remplir DATABASE_URL, AUTH_SECRET, ENCRYPTION_KEY
+docker compose up -d db
+npx prisma migrate deploy
+npm run db:seed         # optionnel : données DEMO
+npm run build && npm start   # http://localhost:3000
