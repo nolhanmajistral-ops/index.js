@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #0a0a0a;
+  --color-ink-2: #111111;
+  --color-ink-3: #171717;
+  --color-line: #262626;
+  --color-line-2: #333333;
+  --color-mute: #8a8a8a;
+  --color-soft: #bdbdbd;
+  --color-bone: #f4f1ea;
+  --color-gold: #c8a96a;
+  --color-gold-soft: #c8a96a22;
+  --color-ok: #6fbf8e;
+  --color-warn: #d9a441;
+  --color-bad: #d8665a;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: ui-serif, Georgia, "Times New Roman", serif;
+}
+
+html { color-scheme: dark; }
+body { background: var(--color-ink); color: var(--color-bone); -webkit-font-smoothing: antialiased; }
+
+@utility card { @apply rounded-2xl border border-line bg-ink-2 p-4 md:p-5; }
+@utility label { @apply text-[11px] font-medium uppercase tracking-[0.14em] text-mute; }
+@utility input { @apply w-full rounded-xl border border-line-2 bg-ink-3 px-3 py-2.5 text-sm text-bone placeholder:text-mute/70 outline-none transition focus:border-gold/70; }
+@utility btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none; }
+@utility btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none bg-bone text-ink hover:bg-white; }
+@utility btn-ghost { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none border border-line-2 text-bone hover:border-mute; }
+@utility btn-danger { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none border border-bad/50 text-bad hover:bg-bad/10; }
+@utility fade-in { animation: fade-in 180ms ease-out both; }
+
+@keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }

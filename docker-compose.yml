@@ -1,0 +1,35 @@
+# Environnement local : PostgreSQL + (optionnel) application.
+#   docker compose up -d db          → base seule (dev avec `npm run dev`)
+#   docker compose up -d --build     → base + application (prod locale)
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nolhan
+      POSTGRES_PASSWORD: nolhan
+      POSTGRES_DB: nolhan_os
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nolhan -d nolhan_os"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    profiles: ["app"]
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://nolhan:nolhan@db:5432/nolhan_os?schema=public
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:
