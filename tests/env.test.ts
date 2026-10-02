@@ -26,3 +26,12 @@ describe("env validation", () => {
     expect(env.AI_PROVIDER).toBe("none");
   });
 });
+
+import { onboardingSchema } from "@/lib/validation/schemas";
+describe("onboarding schema", () => {
+  it("accepte les champs optionnels vides", () => {
+    const r = onboardingSchema.safeParse({ displayName: "N", activity: "Barber", city: "Lausanne", priceCoupe: "40", priceCoupeBarbe: "55", priceTransformation: "55", priceTransformationBarbe: "65", goalRevenueMonth: "", approxMonthlyRevenue: "", goalClientsWeek: "" });
+    expect(r.success).toBe(true);
+    if (r.success) expect(r.data.goalRevenueMonth).toBeUndefined();
+  });
+});

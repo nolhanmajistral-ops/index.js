@@ -5,7 +5,8 @@ const trimmed = (max: number) => z.string().trim().max(max);
 const optionalTrimmed = (max: number) =>
   z.preprocess((v) => (typeof v === "string" && v.trim() === "" ? undefined : v), z.string().trim().max(max).optional());
 const optionalInt = z.preprocess((v) => (v === "" || v === null || v === undefined ? undefined : v), z.coerce.number().int().min(0).max(1_000_000_000).optional());
-const chf = z.preprocess((v) => (v === "" || v === null || v === undefined ? undefined : v), z.coerce.number().min(0).max(1_000_000));
+const chf = z.coerce.number().min(0).max(1_000_000);
+const optionalChf = z.preprocess((v) => (v === "" || v === null || v === undefined ? undefined : v), z.coerce.number().min(0).max(1_000_000).optional());
 
 export const registerSchema = z.object({
   name: trimmed(80).min(2, "Nom trop court"),
@@ -33,7 +34,7 @@ export const onboardingSchema = z.object({
   priceCoupeBarbe: chf,
   priceTransformation: chf,
   priceTransformationBarbe: chf,
-  goalRevenueMonth: chf.optional(),
+  goalRevenueMonth: optionalChf,
   goalClientsWeek: optionalInt,
   goalInstagramFollowers: optionalInt,
   goalVideosWeek: optionalInt,
@@ -41,7 +42,7 @@ export const onboardingSchema = z.object({
   tiktokHandle: optionalTrimmed(60),
   usesPlanity: z.preprocess((v) => v === "on" || v === "true" || v === true, z.boolean()),
   approxActiveClients: optionalInt,
-  approxMonthlyRevenue: chf.optional(),
+  approxMonthlyRevenue: optionalChf,
   weeklyHoursAvailable: optionalInt,
   contentHoursPerWeek: optionalInt,
   loadDemo: z.preprocess((v) => v === "on" || v === "true" || v === true, z.boolean()),
@@ -107,7 +108,7 @@ export const appointmentSchema = z.object({
   clientId: optionalTrimmed(40),
   serviceId: trimmed(40).min(1, "Prestation requise"),
   startsAt: z.coerce.date(),
-  price: chf.optional(),
+  price: optionalChf,
   status: z.enum(["BOOKED", "COMPLETED", "CANCELLED", "NO_SHOW"]).default("COMPLETED"),
 });
 
