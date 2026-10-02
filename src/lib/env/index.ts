@@ -37,7 +37,8 @@ let cached: Env | null = null;
 
 export function getEnv(): Env {
   if (cached) return cached;
-  const parsed = envSchema.safeParse(process.env);
+  // Sur Render, l'URL publique est fournie automatiquement (RENDER_EXTERNAL_URL) si APP_URL n'est pas définie.
+  const parsed = envSchema.safeParse({ ...process.env, APP_URL: process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || undefined });
   if (!parsed.success) {
     const issues = parsed.error.issues.map((i) => `  - ${i.path.join(".")}: ${i.message}`).join("\n");
     throw new Error(`Configuration invalide (.env) :\n${issues}`);

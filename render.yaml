@@ -1,0 +1,41 @@
+# Blueprint Render : site NOLHAN OS + base PostgreSQL (région Francfort, la plus proche de Lausanne).
+# Render → New → Blueprint → choisir ce dépôt → Apply.
+services:
+  - type: web
+    name: nolhan-os
+    runtime: node
+    region: frankfurt
+    plan: free
+    buildCommand: npm ci && npm run build
+    # Les migrations (non destructives) sont appliquées à chaque démarrage.
+    startCommand: npx prisma migrate deploy && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nolhan-os-db
+          property: connectionString
+      # Générés automatiquement par Render à la création (256 bits, base64).
+      # ⚠️ Copie ENCRYPTION_KEY dans un gestionnaire de mots de passe : sans elle, emails/téléphones chiffrés sont perdus.
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: ENCRYPTION_KEY
+        generateValue: true
+      - key: AUTH_TRUST_HOST
+        value: "true"
+      # Mettre "false" une fois ton compte créé.
+      - key: ALLOW_REGISTRATION
+        value: "true"
+      - key: AI_PROVIDER
+        value: none
+      - key: LOG_LEVEL
+        value: info
+
+databases:
+  - name: nolhan-os-db
+    region: frankfurt
+    plan: free
+    databaseName: nolhan_os
+    user: nolhan

@@ -35,3 +35,17 @@ describe("onboarding schema", () => {
     if (r.success) expect(r.data.goalRevenueMonth).toBeUndefined();
   });
 });
+
+import { getEnv, resetEnvCache } from "@/lib/env";
+describe("APP_URL sur Render", () => {
+  it("utilise RENDER_EXTERNAL_URL si APP_URL est absente", () => {
+    const saved = { APP_URL: process.env.APP_URL, RENDER: process.env.RENDER_EXTERNAL_URL };
+    delete process.env.APP_URL;
+    process.env.RENDER_EXTERNAL_URL = "https://nolhan-os.onrender.com";
+    resetEnvCache();
+    expect(getEnv().APP_URL).toBe("https://nolhan-os.onrender.com");
+    process.env.APP_URL = saved.APP_URL;
+    if (saved.RENDER === undefined) delete process.env.RENDER_EXTERNAL_URL;
+    resetEnvCache();
+  });
+});

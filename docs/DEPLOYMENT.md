@@ -42,6 +42,9 @@ Développement : `npm run dev`.
 
 ## 4. Production
 
+### Option recommandée — Render (Blueprint)
+Le fichier `render.yaml` crée le site et la base PostgreSQL (région Francfort) : Render → **New → Blueprint** → choisir le dépôt → **Apply**. `AUTH_SECRET` et `ENCRYPTION_KEY` sont générés par Render (copier `ENCRYPTION_KEY` dans un gestionnaire de mots de passe), `APP_URL` est déduite de l'adresse Render (`RENDER_EXTERNAL_URL`), les migrations s'appliquent au démarrage. Plan gratuit : le site se met en veille après ~15 min sans visite (premier chargement lent) et la base gratuite expire au bout d'environ 30 jours — passer la base sur une offre payante pour conserver tes données.
+
 ### Option A — Docker (VPS, Fly.io, Railway, Render…)
 ```bash
 docker build -t nolhan-os .
