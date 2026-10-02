@@ -24,7 +24,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // Sortie autonome pour l'image Docker (BUILD_STANDALONE=1) ; `next start` classique sinon.
+  output: process.env.BUILD_STANDALONE === "1" ? "standalone" : undefined,
   poweredByHeader: false,
   serverExternalPackages: ["exceljs", "bcryptjs"],
   experimental: { serverActions: { bodySizeLimit: "6mb" } },
