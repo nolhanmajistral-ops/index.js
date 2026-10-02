@@ -150,9 +150,9 @@ test("mobile : navigation basse et raccourcis", async ({ browser }) => {
   await onboard(page, { demo: false });
   const nav = page.getByRole("navigation", { name: "Raccourcis" });
   await expect(nav).toBeVisible();
-  for (const label of ["Dashboard", "Mission", "Contenu", "Client", "Coach IA"]) await expect(nav.getByText(label, { exact: true })).toBeVisible();
-  await nav.getByText("Client", { exact: true }).click();
-  await expect(page).toHaveURL(/\/clients\/new/);
+  for (const label of ["Dashboard", "Mission", "Contenu", "Planning", "Coach IA"]) await expect(nav.getByText(label, { exact: true })).toBeVisible();
+  await nav.getByText("Planning", { exact: true }).click();
+  await expect(page).toHaveURL(/\/planning/);
   const scrollW = await page.evaluate(() => document.documentElement.scrollWidth);
   expect(scrollW).toBeLessThanOrEqual(390);
   await ctx.close();

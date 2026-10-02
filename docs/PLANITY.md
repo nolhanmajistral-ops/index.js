@@ -1,5 +1,7 @@
 # Planity
 
+> **Méthode principale : le Planning** (`/planning`). Tu saisis tes rendez-vous à la main (date, heure, client — créé automatiquement s'il est nouveau —, prestation, prix), puis tu les marques Réalisé / Annulé / Absent : le revenu est ajouté ou retiré automatiquement. L'import CSV/XLSX ci-dessous reste disponible en option (l'export détaillé doit être activé par le service client Planity).
+
 > **Planity ne propose pas d'API publique documentée.** NOLHAN OS n'invente aucune API et ne simule aucune synchronisation. La seule source réelle est l'**export CSV/XLSX** que tu télécharges depuis ton espace Planity. Statut affiché : `Configuration required` tant qu'aucun import n'a réussi, puis `Connected (import)`.
 
 ## Import (page `/planity`)

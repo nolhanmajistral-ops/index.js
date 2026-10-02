@@ -12,8 +12,8 @@ export const RULES: Rule[] = [
   (ds, s) => {
     if (s.dataQuality.hasAppointments) return null;
     return {
-      ruleCode: "SETUP_IMPORT_PLANITY", title: "Importer ton export Planity",
-      action: "Exporte tes rendez-vous depuis Planity (CSV ou Excel) et importe-les dans NOLHAN OS.",
+      ruleCode: "SETUP_IMPORT_PLANITY", title: "Remplir ton planning",
+      action: "Ajoute tes rendez-vous de la semaine dans le Planning (ou importe un export Planity).",
       why: "Aucun rendez-vous n'est enregistré : impossible de calculer ton CA, tes clients ou ta récurrence.",
       dataUsed: { rendezVous: 0, imports: ds.imports.count },
       expectedResult: "CA, clients et récurrence calculés sur tes vraies données.",

@@ -20,7 +20,7 @@ export default async function PlanityPage({ searchParams }: { searchParams: Prom
   const connected = planityBatches.some((b) => b.status === "COMPLETED");
   return (
     <div>
-      <PageHeader title="Planity" subtitle="Import des exports CSV/XLSX. Planity ne fournit pas d'API publique : aucune synchronisation automatique n'est simulée." action={<ConnectionBadge status={connected ? "CONNECTED_IMPORT" : "CONFIGURATION_REQUIRED"} />} />
+      <PageHeader title="Planity" subtitle={<>Optionnel : import des exports CSV/XLSX. Pour saisir tes rendez-vous à la main, utilise le <Link href="/planning" className="text-gold">Planning</Link>.</>} action={<ConnectionBadge status={connected ? "CONNECTED_IMPORT" : "CONFIGURATION_REQUIRED"} />} />
       {sp.rolledBack ? <p role="status" className="mb-4 rounded-lg bg-ok/10 px-3 py-2 text-sm text-ok">{sp.rolledBack.slice(0, 200)}</p> : null}
       <Card><ImportWizard /></Card>
       <p className="mt-2 text-xs text-mute">Fichiers de test : <code>docs/samples/planity-sample.csv</code> et <code>.xlsx</code> (données fictives). Taille max configurable (IMPORT_MAX_FILE_MB).</p>
