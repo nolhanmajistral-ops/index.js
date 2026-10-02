@@ -24,7 +24,7 @@ export async function loadDataset(userId: string, now = new Date()): Promise<Ana
     prisma.dailyMission.findMany({ where: { userId, date: { gte: new Date(now.getTime() - 30 * DAY_MS) } }, select: { date: true, code: true, status: true } }),
     prisma.service.findMany({ where: { userId, active: true }, select: { name: true, priceCents: true }, orderBy: { priceCents: "asc" } }),
     prisma.clientMatchReview.count({ where: { userId, status: "PENDING" } }),
-    prisma.importBatch.aggregate({ where: { userId, status: "COMPLETED" }, _count: { _all: true }, _max: { createdAt: true } }),
+    prisma.importBatch.aggregate({ where: { userId, status: "COMPLETED", provider: "PLANITY" }, _count: { _all: true }, _max: { createdAt: true } }),
   ]);
   const latestByContent = new Map(metrics.map((m) => [m.contentId, m]));
   return {
