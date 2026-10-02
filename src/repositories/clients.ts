@@ -143,6 +143,10 @@ export function listClientsForMatching(userId: string, tx: Tx = prisma) {
 export async function updateClient(userId: string, id: string, input: Omit<ClientInput, "source">, tx: Tx = prisma) {
   const existing = await findClientRow(userId, id, tx);
   if (!existing) return null;
+  if (input.originContentId) {
+    const owned = await tx.content.findFirst({ where: { id: input.originContentId, userId }, select: { id: true } });
+    if (!owned) throw new Error("Contenu d'origine introuvable");
+  }
   const name = displayName(input.firstName, input.lastName, input.fullName) || existing.displayName;
   const h = contactHashes(userId, input.email, input.phone);
   return tx.client.update({
