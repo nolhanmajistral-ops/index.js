@@ -115,17 +115,17 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      <SectionTitle>Planity</SectionTitle>
+      <SectionTitle action={<Link href="/planning" className="text-xs text-gold">Ouvrir le planning</Link>}>Planning</SectionTitle>
       <Card>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <span className="text-sm">Rendez-vous & clients</span>
           <div className="flex items-center gap-2">
-            <ConnectionBadge status={s.planity.status} />
+            {s.planity.imports ? <ConnectionBadge status={s.planity.status} /> : null}
             {s.planity.lastImportAt ? <span className="text-xs text-mute">dernier import {formatDateFr(s.planity.lastImportAt)}</span> : null}
           </div>
         </div>
         {!s.dataQuality.hasAppointments ? (
-          <EmptyState title="Aucun rendez-vous." status="Configuration required" href="/planity" cta="Importer un export Planity (CSV/XLSX)" />
+          <EmptyState title="Aucun rendez-vous." href="/planning" cta="Ajouter tes rendez-vous dans le planning" />
         ) : (
           <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
             <Stat label="RDV semaine" value={formatNumber(s.revenue.servicesWeek)} hint={`${s.planity.upcoming} à venir`} />
