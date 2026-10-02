@@ -2,7 +2,7 @@
   "name": "nolhan-os",
   "version": "0.1.0",
   "private": true,
-  "description": "NOLHAN OS — système de pilotage business, contenu et clients pour Nolhan Yildirim (Barber, Lausanne)",
+  "description": "NOLHAN OS \u2014 syst\u00e8me de pilotage business, contenu et clients pour Nolhan Yildirim (Barber, Lausanne)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -17,9 +17,6 @@
     "db:generate": "prisma generate",
     "samples": "tsx scripts/generate-samples.ts",
     "postinstall": "prisma generate"
-  },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
@@ -42,6 +39,7 @@
     "@types/papaparse": "^5.5.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "dotenv": "^18.0.5",
     "eslint": "^9.39.5",
     "eslint-config-next": "^15.5.27",
     "postcss": "^8.5.28",

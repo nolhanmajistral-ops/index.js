@@ -1,0 +1,849 @@
+// NOLHAN OS — modèle de données
+// Règles :
+//  - toute donnée utilisateur porte userId (isolation SaaS) ;
+//  - toute donnée externe conserve source / externalId / importedAt / lastSyncedAt / sourceUpdatedAt ;
+//  - les métriques sont des snapshots (jamais écrasées) ;
+//  - montants en centimes (Int) pour éviter les erreurs d'arrondi. Devise : CHF.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────── Enums ───────────────────────────────
+
+enum DataSource {
+  PLANITY
+  INSTAGRAM
+  TIKTOK
+  MANUAL
+  DEMO
+}
+
+enum AcquisitionChannel {
+  INSTAGRAM
+  TIKTOK
+  GOOGLE
+  PLANITY
+  WORD_OF_MOUTH
+  WALK_IN
+  OTHER
+  UNKNOWN
+}
+
+enum AttributionConfidence {
+  HIGH
+  MEDIUM
+  LOW
+  UNKNOWN
+}
+
+enum AttributionMethod {
+  DECLARED
+  INFERRED
+  IMPORTED
+}
+
+enum AppointmentStatus {
+  BOOKED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum RevenueKind {
+  SERVICE
+  PRODUCT
+  TIP
+  OTHER
+}
+
+enum RevenueReviewStatus {
+  OK
+  NEEDS_REVIEW
+  DUPLICATE_IGNORED
+}
+
+enum Platform {
+  INSTAGRAM
+  TIKTOK
+}
+
+enum ContentType {
+  TRANSFORMATION
+  BEFORE_AFTER
+  FACE_CAMERA
+  ADVICE
+  HUMOR
+  LIFESTYLE
+  BEHIND_THE_SCENES
+  STORYTELLING
+  CLIENT_REACTION
+  EDUCATION
+  OTHER
+}
+
+enum ContentStatus {
+  IDEA
+  TO_FILM
+  FILMED
+  TO_EDIT
+  READY
+  PUBLISHED
+}
+
+enum ConnectionStatus {
+  CONNECTED
+  CONNECTED_IMPORT
+  DISCONNECTED
+  SYNCING
+  PARTIAL
+  ERROR
+  CONFIGURATION_REQUIRED
+}
+
+enum GoalMetric {
+  INSTAGRAM_FOLLOWERS
+  TIKTOK_FOLLOWERS
+  VIEWS_WEEK
+  CLIENTS_WEEK
+  REVENUE_WEEK
+  REVENUE_MONTH
+  VIDEOS_WEEK
+  STORIES_DAY
+  NEW_CLIENTS_WEEK
+}
+
+enum MissionStatus {
+  PENDING
+  DONE
+  SKIPPED
+  PARTIAL
+}
+
+enum TaskStatus {
+  TODO
+  DONE
+  CANCELLED
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  BOOKED
+  CONVERTED
+  LOST
+}
+
+enum MatchLevel {
+  CERTAIN
+  PROBABLE
+  TO_VERIFY
+  UNKNOWN
+}
+
+enum MatchReviewStatus {
+  PENDING
+  MERGED
+  IGNORED
+}
+
+enum ImportStatus {
+  PROCESSING
+  COMPLETED
+  FAILED
+  ROLLED_BACK
+}
+
+enum ImportChangeAction {
+  CREATED
+  UPDATED
+}
+
+enum SyncStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  PARTIAL
+  FAILED
+}
+
+enum Confidence {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum RecommendationStatus {
+  PROPOSED
+  DONE
+  SKIPPED
+  PARTIAL
+}
+
+enum Outcome {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+  INCONCLUSIVE
+}
+
+enum InsightKind {
+  ANOMALY
+  TREND
+  OBSERVATION
+}
+
+enum MemoryKind {
+  GOAL
+  PREFERENCE
+  PREFERRED_FORMAT
+  AVOIDED_FORMAT
+  EXPERIMENT_RESULT
+  DECISION
+  RECOMMENDATION_OUTCOME
+  NOTE
+}
+
+enum ExperimentStatus {
+  PLANNED
+  RUNNING
+  COMPLETED
+  ABANDONED
+}
+
+// ─────────────────────────────── Identité ───────────────────────────────
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  onboardedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  profile           Profile?
+  services          Service[]
+  clients           Client[]
+  clientIdentifiers ClientIdentifier[]
+  matchReviews      ClientMatchReview[]
+  appointments      Appointment[]
+  revenues          Revenue[]
+  contents          Content[]
+  contentMetrics    ContentMetric[]
+  socialAccounts    SocialAccount[]
+  socialMetrics     SocialMetric[]
+  goals             Goal[]
+  tasks             Task[]
+  missions          DailyMission[]
+  leads             Lead[]
+  attributions      Attribution[]
+  insights          AiInsight[]
+  recommendations   AiRecommendation[]
+  memories          AiMemory[]
+  experiments       AiExperiment[]
+  syncJobs          SyncJob[]
+  importBatches     ImportBatch[]
+  settings          Setting[]
+  auditLogs         AuditLog[]
+}
+
+model Profile {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName          String
+  activity             String   @default("Barber")
+  city                 String   @default("Lausanne")
+  country              String   @default("CH")
+  currency             String   @default("CHF")
+  timezone             String   @default("Europe/Zurich")
+  instagramHandle      String?
+  tiktokHandle         String?
+  usesPlanity          Boolean  @default(false)
+  approxActiveClients  Int?
+  approxMonthlyRevenue Int? // centimes, déclaratif (jamais présenté comme CA réel)
+  weeklyHoursAvailable Int?
+  contentHoursPerWeek  Int?
+  dataRetentionMonths  Int      @default(36)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+// ─────────────────────────────── Business ───────────────────────────────
+
+model Service {
+  id              String     @id @default(cuid())
+  userId          String
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String
+  normalizedName  String
+  priceCents      Int
+  durationMinutes Int?
+  active          Boolean    @default(true)
+  source          DataSource @default(MANUAL)
+  externalId      String?
+  importedAt      DateTime?
+  lastSyncedAt    DateTime?
+  sourceUpdatedAt DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  appointments Appointment[]
+  revenues     Revenue[]
+
+  @@unique([userId, normalizedName])
+  @@unique([userId, source, externalId])
+}
+
+model Client {
+  id                 String             @id @default(cuid())
+  userId             String
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName          String?
+  lastName           String?
+  displayName        String
+  normalizedName     String
+  emailEnc           String? // AES-256-GCM
+  emailHash          String? // index aveugle HMAC
+  phoneEnc           String?
+  phoneHash          String?
+  acquisitionChannel AcquisitionChannel @default(UNKNOWN)
+  originContentId    String?
+  originContent      Content?           @relation(fields: [originContentId], references: [id], onDelete: SetNull)
+  notes              String?
+  source             DataSource         @default(MANUAL)
+  externalId         String?
+  importedAt         DateTime?
+  lastSyncedAt       DateTime?
+  sourceUpdatedAt    DateTime?
+  mergedIntoId       String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  identifiers     ClientIdentifier[]
+  appointments    Appointment[]
+  revenues        Revenue[]
+  attribution     Attribution?
+  leads           Lead[]
+  reviewsAsClient ClientMatchReview[] @relation("ReviewClient")
+  reviewsAsMatch  ClientMatchReview[] @relation("ReviewCandidate")
+
+  @@unique([userId, source, externalId])
+  @@index([userId, emailHash])
+  @@index([userId, phoneHash])
+  @@index([userId, normalizedName])
+  @@index([userId, createdAt])
+}
+
+model ClientIdentifier {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientId  String
+  client    Client     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  type      String // EMAIL_HASH | PHONE_HASH | NAME | EXTERNAL
+  value     String
+  source    DataSource
+  createdAt DateTime   @default(now())
+
+  @@unique([clientId, type, value])
+  @@index([userId, type, value])
+}
+
+/// File de revue des correspondances clients (jamais de fusion automatique sur ressemblance de nom).
+model ClientMatchReview {
+  id                String            @id @default(cuid())
+  userId            String
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientId          String
+  client            Client            @relation("ReviewClient", fields: [clientId], references: [id], onDelete: Cascade)
+  candidateClientId String
+  candidateClient   Client            @relation("ReviewCandidate", fields: [candidateClientId], references: [id], onDelete: Cascade)
+  level             MatchLevel
+  score             Float
+  reasons           Json
+  status            MatchReviewStatus @default(PENDING)
+  importBatchId     String?
+  decidedAt         DateTime?
+  createdAt         DateTime          @default(now())
+
+  @@unique([clientId, candidateClientId])
+  @@index([userId, status])
+}
+
+model Appointment {
+  id              String            @id @default(cuid())
+  userId          String
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientId        String?
+  client          Client?           @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  serviceId       String?
+  service         Service?          @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  serviceName     String
+  startsAt        DateTime
+  status          AppointmentStatus @default(COMPLETED)
+  priceCents      Int
+  dedupKey        String
+  notes           String?
+  source          DataSource        @default(MANUAL)
+  externalId      String?
+  importBatchId   String?
+  importedAt      DateTime?
+  lastSyncedAt    DateTime?
+  sourceUpdatedAt DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  revenue Revenue?
+
+  @@unique([userId, dedupKey])
+  @@unique([userId, source, externalId])
+  @@index([userId, startsAt])
+  @@index([userId, clientId])
+}
+
+model Revenue {
+  id              String              @id @default(cuid())
+  userId          String
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointmentId   String?             @unique
+  appointment     Appointment?        @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  clientId        String?
+  client          Client?             @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  serviceId       String?
+  service         Service?            @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  amountCents     Int
+  occurredAt      DateTime
+  kind            RevenueKind         @default(SERVICE)
+  isEstimated     Boolean             @default(false)
+  reviewStatus    RevenueReviewStatus @default(OK)
+  reviewNote      String?
+  duplicateOfId   String?
+  dedupKey        String
+  label           String?
+  source          DataSource          @default(MANUAL)
+  externalId      String?
+  importBatchId   String?
+  importedAt      DateTime?
+  lastSyncedAt    DateTime?
+  sourceUpdatedAt DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@unique([userId, dedupKey])
+  @@unique([userId, source, externalId])
+  @@index([userId, occurredAt])
+  @@index([userId, reviewStatus])
+}
+
+// ─────────────────────────────── Contenu & réseaux ───────────────────────────────
+
+model Content {
+  id              String        @id @default(cuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform        Platform
+  title           String
+  type            ContentType   @default(OTHER)
+  status          ContentStatus @default(IDEA)
+  hook            String?
+  description     String?
+  durationSec     Int?
+  url             String?
+  notes           String?
+  publishedAt     DateTime?
+  plannedAt       DateTime?
+  archivedAt      DateTime?
+  source          DataSource    @default(MANUAL)
+  externalId      String?
+  importedAt      DateTime?
+  lastSyncedAt    DateTime?
+  sourceUpdatedAt DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  metrics      ContentMetric[]
+  clients      Client[]
+  leads        Lead[]
+  attributions Attribution[]
+
+  @@unique([userId, source, externalId])
+  @@index([userId, publishedAt])
+  @@index([userId, status])
+}
+
+/// Snapshot de performance d'un contenu à un instant donné (jamais écrasé).
+model ContentMetric {
+  id              String     @id @default(cuid())
+  userId          String
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contentId       String
+  content         Content    @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  capturedAt      DateTime   @default(now())
+  views           Int        @default(0)
+  likes           Int        @default(0)
+  comments        Int        @default(0)
+  shares          Int        @default(0)
+  saves           Int        @default(0)
+  followersGained Int        @default(0)
+  profileVisits   Int        @default(0)
+  messages        Int        @default(0)
+  leads           Int        @default(0)
+  source          DataSource @default(MANUAL)
+  createdAt       DateTime   @default(now())
+
+  @@index([userId, contentId, capturedAt])
+}
+
+model SocialAccount {
+  id              String           @id @default(cuid())
+  userId          String
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform        Platform
+  handle          String?
+  status          ConnectionStatus @default(CONFIGURATION_REQUIRED)
+  externalId      String?
+  accessTokenEnc  String? // chiffré AES-256-GCM, jamais exposé au frontend
+  refreshTokenEnc String?
+  tokenExpiresAt  DateTime?
+  scopes          String?
+  lastSyncedAt    DateTime?
+  lastError       String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  metrics SocialMetric[]
+
+  @@unique([userId, platform])
+}
+
+/// Snapshot de compte social (jamais écrasé).
+model SocialMetric {
+  id              String         @id @default(cuid())
+  userId          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  socialAccountId String?
+  socialAccount   SocialAccount? @relation(fields: [socialAccountId], references: [id], onDelete: SetNull)
+  platform        Platform
+  capturedAt      DateTime
+  followers       Int?
+  views           Int?
+  likes           Int?
+  comments        Int?
+  shares          Int?
+  source          DataSource     @default(MANUAL)
+  createdAt       DateTime       @default(now())
+
+  @@unique([userId, platform, capturedAt, source])
+  @@index([userId, platform, capturedAt])
+}
+
+// ─────────────────────────────── Pilotage ───────────────────────────────
+
+model Goal {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  metric    GoalMetric
+  target    Int // centimes pour les objectifs de CA
+  active    Boolean    @default(true)
+  deadline  DateTime?
+  source    DataSource @default(MANUAL)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  tasks Task[]
+
+  @@unique([userId, metric])
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goalId      String?
+  goal        Goal?      @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  title       String
+  description String?
+  dueDate     DateTime?
+  status      TaskStatus @default(TODO)
+  source      DataSource @default(MANUAL)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([userId, status])
+}
+
+model DailyMission {
+  id               String            @id @default(cuid())
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date             DateTime          @db.Date
+  rank             Int
+  code             String
+  title            String
+  why              String
+  action           String
+  priority         Int // 1 = la plus haute
+  expectedResult   String
+  dataUsed         Json?
+  status           MissionStatus     @default(PENDING)
+  resultNote       String?
+  completedAt      DateTime?
+  recommendationId String?
+  recommendation   AiRecommendation? @relation(fields: [recommendationId], references: [id], onDelete: SetNull)
+  source           DataSource        @default(MANUAL)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  @@unique([userId, date, code])
+  @@index([userId, date])
+}
+
+model Lead {
+  id        String             @id @default(cuid())
+  userId    String
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String?
+  channel   AcquisitionChannel @default(UNKNOWN)
+  contentId String?
+  content   Content?           @relation(fields: [contentId], references: [id], onDelete: SetNull)
+  status    LeadStatus         @default(NEW)
+  clientId  String?
+  client    Client?            @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  notes     String?
+  source    DataSource         @default(MANUAL)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  attributions Attribution[]
+
+  @@index([userId, status])
+}
+
+/// Chaîne Content → Lead → Client → Appointment → Revenue. Une attribution principale par client.
+model Attribution {
+  id             String                @id @default(cuid())
+  userId         String
+  user           User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientId       String                @unique
+  client         Client                @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  channel        AcquisitionChannel
+  confidence     AttributionConfidence
+  method         AttributionMethod
+  declaredAnswer String?
+  contentId      String?
+  content        Content?              @relation(fields: [contentId], references: [id], onDelete: SetNull)
+  leadId         String?
+  lead           Lead?                 @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  source         DataSource            @default(MANUAL)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  @@index([userId, channel])
+}
+
+// ─────────────────────────────── IA ───────────────────────────────
+
+model AiInsight {
+  id             String      @id @default(cuid())
+  userId         String
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind           InsightKind
+  code           String
+  title          String
+  observation    String
+  possibleCauses Json
+  actionToTest   String
+  dataUsed       Json
+  periodStart    DateTime
+  periodEnd      DateTime
+  dismissedAt    DateTime?
+  createdAt      DateTime    @default(now())
+
+  @@unique([userId, code, periodEnd])
+  @@index([userId, createdAt])
+}
+
+model AiRecommendation {
+  id             String               @id @default(cuid())
+  userId         String
+  user           User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ruleCode       String
+  action         String
+  why            String
+  dataUsed       Json
+  expectedResult String
+  confidence     Confidence
+  status         RecommendationStatus @default(PROPOSED)
+  baseline       Json
+  evaluateAfter  DateTime
+  evaluatedAt    DateTime?
+  outcome        Outcome?
+  outcomeMetrics Json?
+  evaluationNote String?
+  actedAt        DateTime?
+  createdAt      DateTime             @default(now())
+
+  missions DailyMission[]
+
+  @@index([userId, createdAt])
+  @@index([userId, ruleCode])
+}
+
+model AiMemory {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      MemoryKind
+  key       String?
+  content   String
+  weight    Float      @default(1)
+  sourceRef String?
+  expiresAt DateTime?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([userId, kind])
+}
+
+model AiExperiment {
+  id             String           @id @default(cuid())
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hypothesis     String
+  action         String
+  startDate      DateTime
+  durationDays   Int
+  expectedResult String
+  metrics        Json // liste des métriques suivies
+  baseline       Json?
+  actualResult   Json?
+  conclusion     String?
+  outcome        Outcome?
+  status         ExperimentStatus @default(PLANNED)
+  source         DataSource       @default(MANUAL)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([userId, status])
+}
+
+// ─────────────────────────────── Synchronisation & imports ───────────────────────────────
+
+model SyncJob {
+  id          String     @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider    DataSource
+  kind        String
+  status      SyncStatus @default(PENDING)
+  startedAt   DateTime?
+  completedAt DateTime?
+  durationMs  Int?
+  records     Int        @default(0)
+  errors      Int        @default(0)
+  createdAt   DateTime   @default(now())
+
+  logs SyncLog[]
+
+  @@index([userId, provider, createdAt])
+}
+
+model SyncLog {
+  id        String   @id @default(cuid())
+  syncJobId String
+  syncJob   SyncJob  @relation(fields: [syncJobId], references: [id], onDelete: Cascade)
+  level     String
+  message   String
+  data      Json?
+  createdAt DateTime @default(now())
+}
+
+model ImportBatch {
+  id            String       @id @default(cuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider      DataSource
+  fileName      String
+  fileHash      String
+  fileSize      Int
+  mimeType      String
+  status        ImportStatus @default(PROCESSING)
+  totalRows     Int          @default(0)
+  importedRows  Int          @default(0)
+  skippedRows   Int          @default(0)
+  duplicateRows Int          @default(0)
+  errorRows     Int          @default(0)
+  mapping       Json
+  report        Json?
+  syncJobId     String?
+  createdAt     DateTime     @default(now())
+  completedAt   DateTime?
+  rolledBackAt  DateTime?
+
+  rowErrors ImportRowError[]
+  changes   ImportChange[]
+
+  @@index([userId, createdAt])
+}
+
+model ImportRowError {
+  id            String      @id @default(cuid())
+  importBatchId String
+  importBatch   ImportBatch @relation(fields: [importBatchId], references: [id], onDelete: Cascade)
+  rowNumber     Int
+  rawValue      String
+  error         String
+  correction    String?
+  createdAt     DateTime    @default(now())
+
+  @@index([importBatchId])
+}
+
+/// Journal des écritures d'un import : permet un rollback exact.
+model ImportChange {
+  id            String             @id @default(cuid())
+  importBatchId String
+  importBatch   ImportBatch        @relation(fields: [importBatchId], references: [id], onDelete: Cascade)
+  entity        String // Client | ClientIdentifier | Appointment | Revenue | Service | ClientMatchReview
+  entityId      String
+  action        ImportChangeAction
+  previous      Json?
+  seq           Int
+  createdAt     DateTime           @default(now())
+
+  @@index([importBatchId, seq])
+}
+
+// ─────────────────────────────── Système ───────────────────────────────
+
+model Setting {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key       String
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, key])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  entity    String?
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
