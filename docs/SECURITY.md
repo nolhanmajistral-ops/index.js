@@ -2,7 +2,7 @@
 
 ## Authentification & autorisation
 - Auth.js v5, sessions JWT signées (`AUTH_SECRET`), cookies httpOnly ; mots de passe **bcrypt** (coût 12), temps de réponse constant si l'email n'existe pas.
-- Inscriptions désactivables (`ALLOW_REGISTRATION=false`).
+- Inscriptions désactivables (`ALLOW_REGISTRATION=false`) : seul le premier compte d'une base vide peut alors être créé (verrou transactionnel contre les inscriptions simultanées), puis plus aucun.
 - Middleware (redirection) **et** contrôle serveur systématique (`requireUser`, `requireOnboardedUser`, `requireApiUser`). Le `userId` vient toujours de la session, jamais du client.
 - Repositories : toute requête filtre par `userId` ; mises à jour/suppressions avec `{ id, userId }`. Testé (`tests/repositories.isolation.test.ts`, E2E : accès à la fiche d'un autre compte ⇒ 404).
 

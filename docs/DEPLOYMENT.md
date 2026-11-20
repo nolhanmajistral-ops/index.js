@@ -30,7 +30,7 @@ Développement : `npm run dev`.
 | `AUTH_SECRET` | Signature des sessions | Oui | `openssl rand -base64 32` |
 | `AUTH_TRUST_HOST` | Derrière un proxy | Oui (`true`) | — |
 | `ENCRYPTION_KEY` | Chiffrement AES-256-GCM | Oui | `openssl rand -base64 32` (exactement 32 octets). **À sauvegarder.** |
-| `ALLOW_REGISTRATION` | Autoriser les inscriptions | Non (défaut `true`) | Mettre `false` après création de ton compte |
+| `ALLOW_REGISTRATION` | Autoriser les inscriptions | Non (défaut `true`) | `false` : seul le premier compte (base vide) peut être créé, puis les inscriptions sont fermées |
 | `LOG_LEVEL` | Verbosité | Non (`info`) | `debug`/`info`/`warn`/`error` |
 | `IMPORT_MAX_FILE_MB` | Taille max d'import | Non (`5`) | — |
 | `AI_PROVIDER` | `none` ou `anthropic` | Non (`none`) | — |
@@ -42,8 +42,12 @@ Développement : `npm run dev`.
 
 ## 4. Production
 
-### Option recommandée — Render (Blueprint)
-Le fichier `render.yaml` crée le site et la base PostgreSQL (région Francfort) : Render → **New → Blueprint** → choisir le dépôt → **Apply**. `AUTH_SECRET` et `ENCRYPTION_KEY` sont générés par Render (copier `ENCRYPTION_KEY` dans un gestionnaire de mots de passe), `APP_URL` est déduite de l'adresse Render (`RENDER_EXTERNAL_URL`), les migrations s'appliquent au démarrage. Plan gratuit : le site se met en veille après ~15 min sans visite (premier chargement lent) et la base gratuite expire au bout d'environ 30 jours — passer la base sur une offre payante pour conserver tes données.
+### Option recommandée — Render (Blueprint) + Neon
+1. **Base de données (Neon, gratuit, sans expiration)** : neon.com → créer un projet, région **AWS Europe Central 1 (Frankfurt)** → **Connect** → copier l'adresse `postgresql://…`. La base gratuite de Render expire au bout de 30 jours : elle n'est plus utilisée.
+2. **Site** : Render → **New → Blueprint** → choisir le dépôt → **Apply**, puis coller l'adresse Neon dans `DATABASE_URL` (nolhan-os → **Environment**). `AUTH_SECRET` et `ENCRYPTION_KEY` sont générés par Render (copier `ENCRYPTION_KEY` dans un gestionnaire de mots de passe), `APP_URL` est déduite de l'adresse Render (`RENDER_EXTERNAL_URL`), les migrations s'appliquent au démarrage. Une adresse Neon « pooled » (`-pooler.`) est automatiquement remplacée par la connexion directe (requise par les migrations Prisma).
+3. **Compte** : avec `ALLOW_REGISTRATION=false` (valeur du Blueprint), seul le **premier** compte peut être créé sur une base vide ; les inscriptions se referment ensuite d'elles-mêmes.
+
+Plan gratuit Render : le site se met en veille après ~15 min sans visite (premier chargement ~1 min). L'offre Starter supprime la mise en veille.
 
 ### Option A — Docker (VPS, Fly.io, Railway, Render…)
 ```bash
