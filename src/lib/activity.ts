@@ -20,6 +20,7 @@ export const ACTIVITY_LABEL: Record<string, string> = {
   "demo.reset": "Données DEMO réinitialisées",
   "data.exported": "Export de données",
   "ai.coach.asked": "Question au coach IA",
+  "ai.studio.generated": "Studio contenu",
   "goal.updated": "Objectif mis à jour",
   "settings.updated": "Réglages modifiés",
 };

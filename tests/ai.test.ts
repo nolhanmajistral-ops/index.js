@@ -6,7 +6,6 @@ import { deterministicAnswer, detectIntent, INSUFFICIENT, SUGGESTED_QUESTIONS } 
 import { cleanText } from "@/ai/style/humanize";
 import { planningPatterns } from "@/domain/analytics/planning-patterns";
 import { evaluate, ruleWeightsFromHistory } from "@/ai/learning/learning-engine";
-import { deterministicIdea } from "@/ai/content/generator";
 import { setAIProviderForTests, type AIProvider } from "@/ai/providers";
 import { askCoach } from "@/ai/coach/coach";
 import { ensureTodayMissions, recordMissionResult, runLearningCycle } from "@/ai/recommendations/service";
@@ -115,16 +114,6 @@ describe("Style humain", () => {
   it("retire tirets longs, caractères invisibles et apostrophes courbes", () => {
     expect(cleanText("Le dégradé — c'est la base\u200B. Tu l’as ? Oui…")).toBe("Le dégradé, c'est la base. Tu l'as ? Oui...");
     expect(cleanText("— point de liste")).toBe("- point de liste");
-  });
-});
-
-describe("Générateur de contenu", () => {
-  it("utilise un modèle par défaut explicitement présenté comme hypothèse sans historique", () => {
-    const idea = deterministicIdea(buildSnapshot(emptyDataset(NOW)));
-    expect(idea.format).toBe("TRANSFORMATION");
-    expect(idea.justification).toMatch(/hypothèse/);
-    expect(idea.disclaimer).toMatch(/Aucune garantie/);
-    expect(idea.hook && idea.cta && idea.caption && idea.script.length && idea.plans.length && idea.hashtags.length && idea.stories.length).toBeTruthy();
   });
 });
 

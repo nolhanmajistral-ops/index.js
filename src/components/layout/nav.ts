@@ -1,6 +1,7 @@
 export const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: "LayoutDashboard" },
   { href: "/contents", label: "Contenus", icon: "Clapperboard" },
+  { href: "/studio", label: "Studio", icon: "Wand2" },
   { href: "/clients", label: "Clients", icon: "Users" },
   { href: "/planning", label: "Planning", icon: "CalendarCheck" },
   { href: "/revenue", label: "CA", icon: "Wallet" },
@@ -14,7 +15,7 @@ export const NAV_ITEMS = [
 
 export const MOBILE_SHORTCUTS = [
   { href: "/dashboard", label: "Dashboard", icon: "LayoutDashboard" },
-  { href: "/missions", label: "Mission", icon: "Target" },
+  { href: "/studio", label: "Studio", icon: "Wand2" },
   { href: "/contents/new", label: "Contenu", icon: "PlusSquare" },
   { href: "/planning", label: "Planning", icon: "CalendarCheck" },
   { href: "/ai", label: "Coach IA", icon: "Sparkles" },

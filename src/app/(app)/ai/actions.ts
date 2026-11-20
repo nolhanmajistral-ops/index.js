@@ -4,10 +4,9 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { guarded, fieldErrors, type ActionState } from "@/lib/actions";
 import { recordRecommendationAction, runLearningCycle, persistInsights } from "@/ai/recommendations/service";
-import { generateContentIdea, type ContentIdea } from "@/ai/content/generator";
 import { completeExperiment, createExperiment, deleteMemory, setExperimentStatus } from "@/repositories/ai";
 import { MemoryEngine } from "@/ai/memory/memory-engine";
-import { contentTypes, experimentSchema, formDataToObject } from "@/lib/validation/schemas";
+import { experimentSchema, formDataToObject } from "@/lib/validation/schemas";
 
 export async function recommendationAction(id: string, status: "DONE" | "PARTIAL" | "SKIPPED") {
   const parsed = z.object({ id: z.string().min(1).max(40), status: z.enum(["DONE", "PARTIAL", "SKIPPED"]) }).safeParse({ id, status });
@@ -16,14 +15,6 @@ export async function recommendationAction(id: string, status: "DONE" | "PARTIAL
   revalidatePath("/dashboard");
   revalidatePath("/ai");
   return res;
-}
-
-export async function generateContentAction(input: { format?: string; brief?: string }): Promise<{ idea?: ContentIdea; error?: string }> {
-  const parsed = z.object({ format: z.enum(contentTypes).optional(), brief: z.string().max(500).optional() }).safeParse(input);
-  if (!parsed.success) return { error: "Paramètres invalides." };
-  const res = await guarded("content.generate", async (userId) => ({ ok: true, idea: await generateContentIdea(userId, parsed.data.format, parsed.data.brief) }), "ai");
-  if ("idea" in res && res.idea) return { idea: res.idea as ContentIdea };
-  return { error: ("message" in res && res.message) || "Erreur" };
 }
 
 export async function runLearningAction(_p: ActionState, _fd: FormData): Promise<ActionState> {

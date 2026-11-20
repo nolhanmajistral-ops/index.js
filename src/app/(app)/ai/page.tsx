@@ -6,7 +6,7 @@ import { PageHeader, Card, SectionTitle } from "@/components/ui/card";
 import { Badge, ConfidenceBadge } from "@/components/ui/badge";
 import { formatDateFr, localDateKey } from "@/lib/dates";
 import { CoachChat } from "./coach-chat";
-import { ContentGenerator } from "./content-generator";
+import Link from "next/link";
 import { CompleteExperimentForm, ExperimentForm, LearningButton, PreferenceForm } from "./forms";
 import { abandonExperimentAction, deleteMemoryAction } from "./actions";
 
@@ -25,8 +25,11 @@ export default async function AiPage({ searchParams }: { searchParams: Promise<{
       <PageHeader title="Coach IA" subtitle="Ton expert barber : tes chiffres NOLHAN OS + ce qui marche en ce moment dans la niche. Jamais de chiffre inventé." action={<Badge tone={status.configured ? "ok" : "warn"}>{status.configured ? "IA connectée" : "Mode sans IA (clé Anthropic non configurée)"}</Badge>} />
       <Card><CoachChat suggestions={SUGGESTED_QUESTIONS} llm={status.configured} initialQuestion={initialQuestion} /></Card>
 
-      <SectionTitle>Générateur de contenu</SectionTitle>
-      <Card><ContentGenerator /></Card>
+      <SectionTitle>Créer du contenu</SectionTitle>
+      <Card className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-soft">Scripts de Reels, légendes, stories, plan de la semaine, messages et audit de tes contenus : tout est dans le Studio.</p>
+        <Link href="/studio" className="btn-primary">Ouvrir le Studio</Link>
+      </Card>
 
       <SectionTitle action={<LearningButton />}>Recommandations & apprentissage</SectionTitle>
       <Card>
