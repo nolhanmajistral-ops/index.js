@@ -3,6 +3,7 @@ import { averageTicketCents, completedAppointments, growth, revenueSeries, servi
 import { clientAggregates, overdueClients, revenueByChannel } from "@/domain/clients/metrics";
 import { bestContent, bestFormat, computeContentScores, formatPerformance, publishedIn } from "@/domain/content";
 import { socialSummary, weeklyFollowerSeries } from "./social";
+import { planningPatterns } from "./planning-patterns";
 import { computeGoalProgress } from "@/domain/goals/progress";
 import { lastWeeks, periodOf, previousPeriod, type Period } from "@/lib/dates";
 import type { ScoreWeights } from "@/lib/validation/schemas";
@@ -106,6 +107,10 @@ export function buildSnapshot(ds: AnalyticsDataset, weights?: ScoreWeights) {
         return w.length >= 10 ? w.filter((a) => a.status === "NO_SHOW").length / w.length : null;
       })(),
     },
+    /** Habitudes du planning sur 8 semaines + charge des 7 prochains jours. */
+    planning: planningPatterns(ds.appointments, { start: weeks[0]!.start, end: week.end }, now, tz),
+    /** Tarifs saisis par Nolhan (prestations actives). */
+    services: ds.services,
     goals: computeGoalProgress(ds),
     leads: {
       open: ds.leads.filter((l) => l.status === "NEW" || l.status === "CONTACTED").length,

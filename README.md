@@ -1,6 +1,6 @@
 # NOLHAN OS
 
-Système de pilotage personnel de **Nolhan Yildirim — Barber — Lausanne** : business, clients, rendez-vous (Planity), CA, contenus Instagram/TikTok, objectifs, missions, analytics, attribution, recommandations et coach IA.
+Système de pilotage personnel de **Nolhan Yildirim — Barber — Lausanne** : business, clients (relances WhatsApp), planning des rendez-vous, CA, contenus Instagram/TikTok, Studio contenu (scripts, légendes, stories, plan de la semaine), objectifs, missions, analytics, attribution, recommandations et coach IA expert barber.
 
 **DONNÉES → ANALYSE → INSIGHT → ACTION → RÉSULTAT → APPRENTISSAGE** — avec une question centrale : *qu'est-ce que Nolhan doit faire maintenant ?*
 

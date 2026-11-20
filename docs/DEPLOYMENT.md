@@ -36,6 +36,7 @@ Développement : `npm run dev`.
 | `AI_PROVIDER` | `none` ou `anthropic` | Non (`none`) | — |
 | `ANTHROPIC_API_KEY` | Clé Claude | Si `anthropic` | console.anthropic.com → API Keys |
 | `AI_MODEL` | Modèle Claude | Non (`claude-opus-5-5`) | — |
+| `AI_WEB_SEARCH` | Recherche web du coach et du Studio | Non (`true`) | `false` pour la couper |
 | `INSTAGRAM_APP_ID` / `_SECRET` / `_REDIRECT_URI` | OAuth Instagram | Non | `docs/INSTAGRAM.md` |
 | `TIKTOK_CLIENT_KEY` / `_SECRET` / `_REDIRECT_URI` | OAuth TikTok | Non | `docs/TIKTOK.md` |
 | `SEED_DEMO_EMAIL` / `SEED_DEMO_PASSWORD` | Compte du seed DEMO | Pour `db:seed` | Mot de passe ≥ 10 caractères de ton choix |
@@ -45,7 +46,8 @@ Développement : `npm run dev`.
 ### Option recommandée — Render (Blueprint) + Neon
 1. **Base de données (Neon, gratuit, sans expiration)** : neon.com → créer un projet, région **AWS Europe Central 1 (Frankfurt)** → **Connect** → copier l'adresse `postgresql://…`. La base gratuite de Render expire au bout de 30 jours : elle n'est plus utilisée.
 2. **Site** : Render → **New → Blueprint** → choisir le dépôt → **Apply**, puis coller l'adresse Neon dans `DATABASE_URL` (nolhan-os → **Environment**). `AUTH_SECRET` et `ENCRYPTION_KEY` sont générés par Render (copier `ENCRYPTION_KEY` dans un gestionnaire de mots de passe), `APP_URL` est déduite de l'adresse Render (`RENDER_EXTERNAL_URL`), les migrations s'appliquent au démarrage. Une adresse Neon « pooled » (`-pooler.`) est automatiquement remplacée par la connexion directe (requise par les migrations Prisma).
-3. **Compte** : avec `ALLOW_REGISTRATION=false` (valeur du Blueprint), seul le **premier** compte peut être créé sur une base vide ; les inscriptions se referment ensuite d'elles-mêmes.
+3. **IA (optionnel)** : console.anthropic.com → créer une clé API, puis la coller dans `ANTHROPIC_API_KEY` (nolhan-os → **Environment**). Sans clé, le coach et le Studio fonctionnent en mode sans IA.
+4. **Compte** : avec `ALLOW_REGISTRATION=false` (valeur du Blueprint), seul le **premier** compte peut être créé sur une base vide ; les inscriptions se referment ensuite d'elles-mêmes.
 
 Plan gratuit Render : le site se met en veille après ~15 min sans visite (premier chargement ~1 min). L'offre Starter supprime la mise en veille.
 

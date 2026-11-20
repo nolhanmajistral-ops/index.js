@@ -33,6 +33,11 @@ export default async function DashboardPage() {
       {s.dataQuality.demoData ? <DemoBanner /> : null}
 
       <NextMoveCard move={nba.primary} recommendationId={recommendation?.id} status={recommendation?.status} />
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Link href={`/ai?q=${encodeURIComponent("Fais-moi mon brief du jour")}`} className="btn-ghost px-3 py-1.5 text-xs">Brief du jour avec le coach</Link>
+        <Link href="/studio?mode=stories" className="btn-ghost px-3 py-1.5 text-xs">Stories du jour</Link>
+        {s.clients.overdue.length ? <Link href="/clients" className="btn-ghost px-3 py-1.5 text-xs">Relancer {s.clients.overdue.length} client{s.clients.overdue.length > 1 ? "s" : ""}</Link> : null}
+      </div>
       {nba.alternatives.length ? (
         <p className="mt-3 text-xs text-mute">
           Ensuite : {nba.alternatives.map((a) => a.title).join(" · ")} — <Link href="/missions" className="text-gold">voir les missions du jour</Link>

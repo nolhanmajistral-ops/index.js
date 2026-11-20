@@ -23,6 +23,8 @@ export const envSchema = z.object({
   AI_PROVIDER: z.preprocess(emptyToUndefined, z.enum(["none", "anthropic"]).default("none")),
   ANTHROPIC_API_KEY: optionalString,
   AI_MODEL: optionalString,
+  /** Recherche web du coach et du Studio (tendances du moment, sources citées). */
+  AI_WEB_SEARCH: booleanString(true),
   INSTAGRAM_APP_ID: optionalString,
   INSTAGRAM_APP_SECRET: optionalString,
   INSTAGRAM_REDIRECT_URI: optionalString,

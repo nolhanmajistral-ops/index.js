@@ -4,11 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import {
-  CalendarCheck, Clapperboard, Flag, LayoutDashboard, LineChart, PlusSquare, Radio, Settings, Sparkles, Target, UserPlus, Users, Wallet,
+  CalendarCheck, Clapperboard, Flag, LayoutDashboard, LineChart, PlusSquare, Radio, Settings, Sparkles, Target, UserPlus, Users, Wallet, Wand2,
 } from "lucide-react";
 import { MOBILE_SHORTCUTS, NAV_ITEMS } from "./nav";
 
-const ICONS = { CalendarCheck, Clapperboard, Flag, LayoutDashboard, LineChart, PlusSquare, Radio, Settings, Sparkles, Target, UserPlus, Users, Wallet };
+const ICONS = { CalendarCheck, Clapperboard, Flag, LayoutDashboard, LineChart, PlusSquare, Radio, Settings, Sparkles, Target, UserPlus, Users, Wallet, Wand2 };
 
 function isActive(pathname: string, href: string) {
   if (href.endsWith("/new")) return pathname === href;
