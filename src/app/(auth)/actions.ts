@@ -9,7 +9,7 @@ import { getEnv } from "@/lib/env";
 import { LIMITS, rateLimit } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { formDataToObject, loginSchema, registerSchema } from "@/lib/validation/schemas";
-import { createUser, findUserByEmail } from "@/repositories/users";
+import { createUserIfAllowed, findUserByEmail, isRegistrationAvailable } from "@/repositories/users";
 import { audit } from "@/repositories/audit";
 
 export interface AuthState {
@@ -24,7 +24,8 @@ async function clientIp() {
 }
 
 export async function registerAction(_prev: AuthState, fd: FormData): Promise<AuthState> {
-  if (!getEnv().ALLOW_REGISTRATION) return { message: "Les inscriptions sont fermées." };
+  const open = getEnv().ALLOW_REGISTRATION;
+  if (!(await isRegistrationAvailable(open))) return { message: "Les inscriptions sont fermées." };
   const rl = rateLimit(`register:${await clientIp()}`, LIMITS.register.limit, LIMITS.register.windowMs);
   if (!rl.ok) return { message: `Trop de tentatives. Réessaie dans ${rl.retryAfterSec}s.` };
   const parsed = registerSchema.safeParse(formDataToObject(fd));
@@ -33,7 +34,8 @@ export async function registerAction(_prev: AuthState, fd: FormData): Promise<Au
   }
   const { name, email, password } = parsed.data;
   if (await findUserByEmail(email)) return { message: "Un compte existe déjà avec cet email." };
-  const user = await createUser({ name, email, passwordHash: await hashPassword(password) });
+  const user = await createUserIfAllowed({ name, email, passwordHash: await hashPassword(password) }, open);
+  if (!user) return { message: "Les inscriptions sont fermées." };
   await audit(user.id, "user.registered");
   logger.info("auth.registered", { userId: user.id });
   await signIn("credentials", { email, password, redirect: false });
