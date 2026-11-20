@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { AcquisitionChannel } from "@prisma/client";
 import { requireOnboardedUser } from "@/lib/auth/session";
-import { listClients, visitStatsFor, clientNames } from "@/repositories/clients";
+import { listClients, visitStatsFor, clientContacts } from "@/repositories/clients";
+import { relanceMessage, whatsAppLink } from "@/domain/clients/relance";
 import { listLeads } from "@/repositories/leads";
 import { listContentOptions } from "@/repositories/contents";
 import { countPendingReviews } from "@/repositories/match-reviews";
@@ -15,6 +16,7 @@ import { acquisitionChannels } from "@/lib/validation/schemas";
 import { formatCHF, formatNumber, formatPercent } from "@/lib/money";
 import { formatDateFr } from "@/lib/dates";
 import { LeadForm } from "./lead-form";
+import { CopyButton } from "./copy-button";
 import { leadStatusAction } from "./actions";
 
 export const metadata = { title: "Clients" };
@@ -26,7 +28,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
   const page = Math.max(1, Number(sp.page) || 1);
   const [list, reviews, { snapshot: s }, leads, contents] = await Promise.all([listClients(user.id, { q: sp.q?.slice(0, 100), channel, page, pageSize: 25 }), countPendingReviews(user.id), getAnalytics(user.id), listLeads(user.id), listContentOptions(user.id)]);
   const stats = await visitStatsFor(user.id, list.items.map((c) => c.id));
-  const overdueNames = new Map((await clientNames(user.id, s.clients.overdue.slice(0, 10).map((o) => o.clientId))).map((c) => [c.id, c.displayName]));
+  const overdueContacts = new Map((await clientContacts(user.id, s.clients.overdue.slice(0, 10).map((o) => o.clientId))).map((c) => [c.id, c]));
   const openLeads = leads.filter((l) => l.status === "NEW" || l.status === "CONTACTED" || l.status === "BOOKED");
   const qs = (extra: Record<string, string | undefined>) => new URLSearchParams(Object.entries({ ...sp, ...extra }).filter(([, v]) => v) as [string, string][]).toString();
 
@@ -45,13 +47,26 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
         <>
           <SectionTitle>À relancer</SectionTitle>
           <Card>
+            <p className="mb-2 text-xs text-mute">Clients réguliers qui ont dépassé leur rythme habituel. Le bouton ouvre WhatsApp avec un message prêt : relis-le, puis envoie-le toi-même.</p>
             <ul className="divide-y divide-line text-sm">
-              {s.clients.overdue.slice(0, 10).map((o) => (
-                <li key={o.clientId} className="flex justify-between py-2">
-                  <Link href={`/clients/${o.clientId}`}>{overdueNames.get(o.clientId) ?? "Client"}</Link>
-                  <span className="text-xs text-mute">{o.daysSince} j sans visite · habituellement tous les {o.usualInterval} j</span>
-                </li>
-              ))}
+              {s.clients.overdue.slice(0, 10).map((o) => {
+                const contact = overdueContacts.get(o.clientId);
+                const message = contact ? relanceMessage(contact, o.daysSince) : "";
+                const wa = contact ? whatsAppLink(contact.phone, message) : null;
+                return (
+                  <li key={o.clientId} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
+                    <div className="min-w-0">
+                      <Link href={`/clients/${o.clientId}`} className="font-medium">{contact?.displayName ?? "Client"}</Link>
+                      <div className="text-xs text-mute">{o.daysSince} j sans visite · habituellement tous les {o.usualInterval} j</div>
+                    </div>
+                    {wa ? (
+                      <a href={wa} target="_blank" rel="noopener noreferrer" className="btn-primary px-3 py-1.5 text-xs">Relancer sur WhatsApp</a>
+                    ) : message ? (
+                      <CopyButton text={message} />
+                    ) : null}
+                  </li>
+                );
+              })}
             </ul>
           </Card>
         </>

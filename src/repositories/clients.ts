@@ -229,6 +229,12 @@ export function clientNames(userId: string, ids: string[]) {
   return prisma.client.findMany({ where: { userId, id: { in: ids } }, select: { id: true, displayName: true } });
 }
 
+/** Prénom + téléphone déchiffré des clients à relancer (affichés uniquement au propriétaire, jamais envoyés à l'IA). */
+export async function clientContacts(userId: string, ids: string[]) {
+  const rows = await prisma.client.findMany({ where: { userId, id: { in: ids } }, select: { id: true, displayName: true, firstName: true, phoneEnc: true } });
+  return rows.map((r) => ({ id: r.id, displayName: r.displayName, firstName: r.firstName, phone: decryptNullable(r.phoneEnc) }));
+}
+
 export function clientOptions(userId: string) {
   return prisma.client.findMany({ where: { userId, mergedIntoId: null }, select: { id: true, displayName: true }, orderBy: { displayName: "asc" }, take: 1000 });
 }
