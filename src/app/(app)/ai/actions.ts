@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { guarded, fieldErrors, type ActionState } from "@/lib/actions";
 import { recordRecommendationAction, runLearningCycle, persistInsights } from "@/ai/recommendations/service";
-import { askCoach, type CoachReply } from "@/ai/coach/coach";
 import { generateContentIdea, type ContentIdea } from "@/ai/content/generator";
 import { completeExperiment, createExperiment, deleteMemory, setExperimentStatus } from "@/repositories/ai";
 import { MemoryEngine } from "@/ai/memory/memory-engine";
@@ -17,16 +16,6 @@ export async function recommendationAction(id: string, status: "DONE" | "PARTIAL
   revalidatePath("/dashboard");
   revalidatePath("/ai");
   return res;
-}
-
-const askSchema = z.object({ question: z.string().trim().min(2).max(500), history: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(4000) })).max(12) });
-
-export async function askCoachAction(input: { question: string; history: { role: "user" | "assistant"; content: string }[] }): Promise<{ reply?: CoachReply; error?: string }> {
-  const parsed = askSchema.safeParse(input);
-  if (!parsed.success) return { error: "Question invalide." };
-  const res = await guarded("coach", async (userId) => ({ ok: true, reply: await askCoach(userId, parsed.data.question, parsed.data.history) }), "ai");
-  if ("reply" in res && res.reply) return { reply: res.reply as CoachReply };
-  return { error: ("message" in res && res.message) || "Erreur" };
 }
 
 export async function generateContentAction(input: { format?: string; brief?: string }): Promise<{ idea?: ContentIdea; error?: string }> {

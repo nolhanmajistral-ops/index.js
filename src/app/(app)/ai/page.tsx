@@ -14,14 +14,16 @@ export const metadata = { title: "Coach IA" };
 
 const OUTCOME: Record<string, { label: string; tone: "ok" | "neutral" | "bad" | "warn" }> = { POSITIVE: { label: "Positif", tone: "ok" }, NEUTRAL: { label: "Neutre", tone: "neutral" }, NEGATIVE: { label: "Négatif", tone: "bad" }, INCONCLUSIVE: { label: "Non concluant", tone: "warn" } };
 
-export default async function AiPage() {
+export default async function AiPage({ searchParams }: { searchParams: Promise<{ q?: string | string[] }> }) {
   const user = await requireOnboardedUser();
+  const q = (await searchParams).q;
+  const initialQuestion = typeof q === "string" && q.trim().length >= 2 ? q.trim().slice(0, 300) : undefined;
   const [recs, experiments, memories] = await Promise.all([listRecommendations(user.id, 20), listExperiments(user.id), listMemories(user.id, undefined, 40)]);
   const status = aiStatus();
   return (
     <div>
-      <PageHeader title="Coach IA" subtitle="Réponses fondées uniquement sur tes données. Sinon : « Données insuffisantes pour conclure. »" action={<Badge tone={status.configured ? "ok" : "warn"}>{status.configured ? `Fournisseur : ${status.provider}` : "Mode déterministe (aucun LLM configuré)"}</Badge>} />
-      <Card><CoachChat suggestions={SUGGESTED_QUESTIONS} /></Card>
+      <PageHeader title="Coach IA" subtitle="Ton expert barber : tes chiffres NOLHAN OS + ce qui marche en ce moment dans la niche. Jamais de chiffre inventé." action={<Badge tone={status.configured ? "ok" : "warn"}>{status.configured ? "IA connectée" : "Mode sans IA (clé Anthropic non configurée)"}</Badge>} />
+      <Card><CoachChat suggestions={SUGGESTED_QUESTIONS} llm={status.configured} initialQuestion={initialQuestion} /></Card>
 
       <SectionTitle>Générateur de contenu</SectionTitle>
       <Card><ContentGenerator /></Card>

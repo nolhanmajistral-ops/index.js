@@ -2,7 +2,9 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { emptyDataset } from "@/domain/analytics/dataset";
 import { buildSnapshot } from "@/domain/analytics/snapshot";
 import { buildAiContext } from "@/ai/context/context-builder";
-import { deterministicAnswer, detectIntent, INSUFFICIENT } from "@/ai/coach/deterministic";
+import { deterministicAnswer, detectIntent, INSUFFICIENT, SUGGESTED_QUESTIONS } from "@/ai/coach/deterministic";
+import { cleanText } from "@/ai/style/humanize";
+import { planningPatterns } from "@/domain/analytics/planning-patterns";
 import { evaluate, ruleWeightsFromHistory } from "@/ai/learning/learning-engine";
 import { deterministicIdea } from "@/ai/content/generator";
 import { setAIProviderForTests, type AIProvider } from "@/ai/providers";
@@ -54,6 +56,65 @@ describe("Coach déterministe", () => {
     const a = deterministicAnswer("Comment augmenter mon CA ?", buildSnapshot(ds), [], null);
     expect(a.insufficient).toBe(false);
     expect(a.answer).toContain("95 CHF");
+  });
+});
+
+describe("Coach : une réponse adaptée à chaque question", () => {
+  const data = () => withAppointments([
+    appt("c1", "2026-08-07T08:00:00Z"), appt("c1", "2026-08-28T08:00:00Z"),
+    appt("c2", "2026-09-29T09:00:00Z", "Coupe + barbe", 5500), appt("c3", "2026-10-01T14:00:00Z"),
+    appt("c4", "2026-10-03T09:00:00Z", "Coupe", 4000, "BOOKED"),
+  ]);
+  it("reconnaît les nouvelles questions suggérées, chacune avec son sujet", () => {
+    expect(SUGGESTED_QUESTIONS.map(detectIntent)).toEqual(["brief", "filling", "content", "trends", "retention", "reviews", "pricing", "basket"]);
+    expect(detectIntent("Comment éviter les lapins ?")).toBe("noshow");
+    expect(detectIntent("Que répondre à un DM qui demande le prix ?")).toBe("pricing");
+    expect(detectIntent("Que répondre à ce message ?")).toBe("dm");
+    expect(detectIntent("Idées de stories pour aujourd'hui")).toBe("stories");
+    expect(detectIntent("Salut")).toBe("general");
+  });
+  it("des questions différentes ne reçoivent jamais la même réponse", () => {
+    const s = buildSnapshot(data());
+    const questions = [...SUGGESTED_QUESTIONS, "Comment éviter les lapins ?", "Que répondre à ce message ?", "Idées de stories pour aujourd'hui", "Salut", "Pourquoi ?", "Qu'est-ce qui baisse ?"];
+    const answers = questions.map((q) => deterministicAnswer(q, s, [], null).answer);
+    expect(new Set(answers).size).toBe(questions.length);
+  });
+  it("tendances : ne les invente pas sans recherche web", () => {
+    const a = deterministicAnswer("Qu'est-ce qui marche en ce moment dans la niche barber ?", buildSnapshot(data()), [], null);
+    expect(a.answer).toMatch(/recherche web/);
+    expect(a.answer).toMatch(/je ne vais pas t'inventer/i);
+  });
+  it("créneaux vides : cite les jours sans rendez-vous des 7 prochains jours", () => {
+    const a = deterministicAnswer("Comment remplir mes créneaux vides ?", buildSnapshot(data()), [], null);
+    expect(a.answer).toMatch(/Jours sans aucun rendez-vous/);
+    expect(a.answer).toMatch(/dimanche/); // 4 oct. 2026 : aucun rendez-vous
+    expect(a.answer).not.toMatch(/samedi,/); // samedi 3 oct. : 1 rendez-vous réservé
+  });
+  it("idées de vidéos variées : la sélection change selon le jour", () => {
+    const ideas = (iso: string) => deterministicAnswer("Donne-moi 3 idées de vidéos", buildSnapshot({ ...emptyDataset(new Date(iso)) }), [], null).answer;
+    const days = ["2026-10-01T12:00:00Z", "2026-10-02T12:00:00Z", "2026-10-03T12:00:00Z", "2026-10-04T12:00:00Z"].map(ideas);
+    expect(new Set(days).size).toBeGreaterThan(1);
+    expect(days[0]).toContain(INSUFFICIENT);
+  });
+});
+
+describe("Planning : habitudes et charge à venir", () => {
+  it("compte les jours remplis, les tranches horaires et les rendez-vous des 7 prochains jours", () => {
+    const ds = withAppointments([appt("a", "2026-09-29T08:00:00Z"), appt("b", "2026-09-29T13:00:00Z"), appt("c", "2026-09-30T16:00:00Z"), appt("d", "2026-10-03T09:00:00Z", "Coupe", 4000, "BOOKED")]);
+    const p = planningPatterns(ds.appointments, { start: new Date("2026-08-01"), end: new Date("2026-10-10") }, NOW, "Europe/Zurich");
+    expect(p.total).toBe(3);
+    expect(p.busiestDays[0]).toBe("mardi");
+    expect(p.bySlot).toEqual({ matin: 1, midi: 0, apresMidi: 1, soir: 1 }); // heures de Zurich (UTC+2)
+    expect(p.quietestDays).toEqual([]); // moins de 10 rendez-vous : pas de conclusion
+    expect(p.nextDays[0]).toEqual({ day: "vendredi", booked: 0 });
+    expect(p.nextDays[1]).toEqual({ day: "samedi", booked: 1 });
+  });
+});
+
+describe("Style humain", () => {
+  it("retire tirets longs, caractères invisibles et apostrophes courbes", () => {
+    expect(cleanText("Le dégradé — c'est la base\u200B. Tu l’as ? Oui…")).toBe("Le dégradé, c'est la base. Tu l'as ? Oui...");
+    expect(cleanText("— point de liste")).toBe("- point de liste");
   });
 });
 
@@ -138,6 +199,28 @@ describe("Boucle complète (PostgreSQL)", () => {
     expect(captured).not.toContain("Secret Person");
     expect(captured).not.toContain("secret@example.com");
     expect(captured).not.toContain("111 22 33");
+
+    // Fournisseur en flux : prompt expert barber, recherche web demandée, texte progressif, sources, style nettoyé.
+    let request: { system: string; messages: { content: string }[]; webSearch?: boolean } | null = null;
+    const deltas: string[] = [];
+    setAIProviderForTests({
+      ...fake,
+      async stream(input, handlers) {
+        request = input;
+        handlers.onStatus?.("Recherche web en cours…");
+        for (const d of ["Remplis jeudi ", "— poste une story."]) handlers.onText?.(d);
+        return { text: "Remplis jeudi — poste une story.", model: "fake-2", provider: "fake", sources: [{ title: "Tendances", url: "https://example.com/t" }] };
+      },
+    });
+    const streamed = await askCoach(u.id, "Comment remplir mes créneaux vides ?", [], new Date(), { onText: (d) => deltas.push(d) });
+    expect(streamed).toMatchObject({ mode: "llm", answer: "Remplis jeudi, poste une story.", sources: [{ url: "https://example.com/t" }] });
+    expect(deltas).toHaveLength(2);
+    expect(request!.system).toContain("expert reconnu de la niche barber");
+    expect(request!.webSearch).toBe(true);
+    const last = request!.messages.at(-1)!.content;
+    expect(last).toContain("Question de Nolhan : Comment remplir mes créneaux vides ?");
+    expect(last).toContain("<donnees_nolhan_os");
+    expect(last).not.toContain("Secret Person");
 
     setAIProviderForTests({ ...fake, async complete() { throw new Error("timeout"); } });
     const fallback = await askCoach(u.id, "Comment augmenter mon CA ?");
