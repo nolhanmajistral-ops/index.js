@@ -111,7 +111,7 @@ export function studioFallback(modeId: StudioModeId, inputs: Inputs, s: Business
     case "caption":
       return `## Rôle\n${inputs.role === "B" ? "B : la légende fait l'accroche (1re ligne courte qui coupe sur un suspense)." : "A : la vidéo a déjà son accroche (1re ligne = contexte ou demande)."}\n\n## Légende à compléter\n{{1re ligne : moins de 125 caractères, sans emoji au début}}\n\n${inputs.sujet ?? ""}\n\n{{1 à 3 petits paragraphes avec ${inputs.motsCles ? `« ${inputs.motsCles} »` : "« barber Lausanne »"} dans une phrase normale}}\n\nRéserve ton créneau, lien en bio.\n\n#barberlausanne #lausanne #barber #degrade #coiffurehomme\n\n${NO_AI}`;
     case "stories": {
-      const ideas = seededPick(STORY_IDEAS, 3, seed);
+      const ideas = seededPick(STORY_IDEAS.slice(1), 3, seed); // la 1re (« dernières places ») sert au sticker
       return `## Stories\n1. [Toi ou tes mains au poste, ce matin] « Journée chargée aujourd'hui »\n2. [Une coupe en cours, gros plan] ${ideas[0]}\n3. [Le résultat] ${ideas[1]}\n4. [Sticker] ${inputs.objectif === "remplir" || free.length ? `« Dernières places ${free[0] ?? "demain"} : {{horaire 1}} et {{horaire 2}}. Réponds pour réserver. »` : ideas[2]}\n5. [Fin] Le résultat du sondage ou le teaser de demain\n\nAprès la story : réponds à chaque personne qui a réagi.\n${free.length ? `\nJours sans rendez-vous : ${free.join(", ")}.` : ""}\n\n${NO_AI}`;
     }
     case "plan": {

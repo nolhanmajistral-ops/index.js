@@ -102,9 +102,10 @@ test("flux complet : inscription → DEMO → client → contenu → snapshot �
   // Coach IA (mode déterministe, données réelles)
   await page.goto("/ai");
   await page.locator("html[data-hydrated]").waitFor();
-  await page.getByRole("button", { name: "Comment augmenter mon CA ?" }).click();
+  await page.getByLabel("Question au coach").fill("Comment augmenter mon CA ?");
+  await page.getByRole("button", { name: "Envoyer" }).click();
   await expect(page.getByText(/CA du mois à date/)).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByText("Mode déterministe (aucun fournisseur IA configuré).")).toBeVisible();
+  await expect(page.getByText("Mode sans IA : ajoute ta clé Anthropic pour des réponses d'expert.")).toBeVisible();
 
   // Mission → résultat
   await page.goto("/missions");
@@ -150,7 +151,7 @@ test("mobile : navigation basse et raccourcis", async ({ browser }) => {
   await onboard(page, { demo: false });
   const nav = page.getByRole("navigation", { name: "Raccourcis" });
   await expect(nav).toBeVisible();
-  for (const label of ["Dashboard", "Mission", "Contenu", "Planning", "Coach IA"]) await expect(nav.getByText(label, { exact: true })).toBeVisible();
+  for (const label of ["Dashboard", "Studio", "Contenu", "Planning", "Coach IA"]) await expect(nav.getByText(label, { exact: true })).toBeVisible();
   await nav.getByText("Planning", { exact: true }).click();
   await expect(page).toHaveURL(/\/planning/);
   const scrollW = await page.evaluate(() => document.documentElement.scrollWidth);

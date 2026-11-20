@@ -33,7 +33,16 @@ services:
       # Fermées : seul le tout premier compte (base vide) peut être créé, puis plus personne.
       - key: ALLOW_REGISTRATION
         value: "false"
+      # IA : Claude (Anthropic). Sans clé, le site marche en mode sans IA (réponses et trames automatiques).
       - key: AI_PROVIDER
-        value: none
+        value: anthropic
+      # Clé API Anthropic (console.anthropic.com → API Keys) : à saisir dans le tableau de bord Render, jamais dans Git.
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: AI_MODEL
+        value: claude-opus-5-5
+      # Recherche web pour les tendances du moment (coach + Studio). "false" pour la couper.
+      - key: AI_WEB_SEARCH
+        value: "true"
       - key: LOG_LEVEL
         value: info

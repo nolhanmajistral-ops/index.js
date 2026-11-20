@@ -102,7 +102,7 @@ export function CoachChat({ suggestions, llm, initialQuestion }: { suggestions: 
                 </ul>
               </div>
             ) : null}
-            {m.meta ? <div className="mt-2"><Badge tone={m.meta === "Erreur" ? "bad" : m.meta === "IA" ? "ok" : "neutral"}>{m.meta}</Badge></div> : null}
+            {m.meta === "IA" || m.meta === "Erreur" ? <div className="mt-2"><Badge tone={m.meta === "IA" ? "ok" : "bad"}>{m.meta}</Badge></div> : m.meta ? <p className="mt-2 text-xs text-mute">{m.meta}</p> : null}
             {m.data && Object.keys(m.data).length ? (
               <details className="mt-2 text-xs text-mute"><summary className="cursor-pointer">Données utilisées</summary><ul className="mt-1">{Object.entries(m.data).map(([k, v]) => <li key={k}>{k} : {String(v)}</li>)}</ul></details>
             ) : null}

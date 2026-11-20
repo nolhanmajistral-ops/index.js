@@ -80,7 +80,7 @@ export const VIDEO_IDEAS = [
 ] as const;
 
 export const STORY_IDEAS = [
-  "« Dernières places demain : 10h et 15h. Réponds à cette story pour réserver. »",
+  "« Dernières places demain : [heure] et [heure]. Réponds à cette story pour réserver. » (mets tes vrais horaires libres)",
   "Sondage : « Dégradé bas ou dégradé haut ? » (puis montrer la coupe gagnante)",
   "Avant/après de la journée avec un sticker lien vers la réservation",
   "Boîte à questions : « Pose-moi ta question cheveux / barbe »",
@@ -217,13 +217,13 @@ export function deterministicAnswer(q: string, s: BusinessSnapshot, anomalies: A
     case "retention": {
       const freq = s.clients.eightWeeks.avgFrequencyDays;
       return done(
-        `${freq ? `Tes clients reviennent en moyenne tous les ${Math.round(freq)} jours.` : "Fréquence de retour encore inconnue (il faut au moins 2 visites par client dans le Planning)."} ${s.clients.overdue.length} client(s) régulier(s) ont dépassé leur rythme habituel.\n\nCe qui marche dans la niche :\n1. Proposer le prochain rendez-vous avant qu'il parte (« Je te mets dans 3 semaines, même heure ? »).\n2. Relance personnalisée quand il dépasse son rythme : « Salut Karim, ça fait 5 semaines, ton dégradé doit commencer à pousser 😄 J'ai de la place jeudi 17h ou samedi 10h, je te bloque lequel ? »\n3. Noter dans sa fiche le sabot et ses préférences pour refaire exactement la même coupe.\n\n**Action du jour :** envoie la relance à tes clients en retard (bouton WhatsApp dans Clients).`,
+        `${freq ? `Tes clients reviennent en moyenne tous les ${Math.round(freq)} jours.` : "Fréquence de retour encore inconnue (il faut au moins 2 visites par client dans le Planning)."} ${s.clients.overdue.length} client(s) régulier(s) ont dépassé leur rythme habituel.\n\nCe qui marche dans la niche :\n1. Proposer le prochain rendez-vous avant qu'il parte (« Je te mets dans 3 semaines, même heure ? »).\n2. Relance personnalisée quand il dépasse son rythme : « Salut [prénom], ça fait 5 semaines, ton dégradé doit commencer à pousser 😄 J'ai de la place [jour heure] ou [jour heure], je te bloque lequel ? »\n3. Noter dans sa fiche le sabot et ses préférences pour refaire exactement la même coupe.\n\n**Action du jour :** envoie la relance à tes clients en retard (bouton WhatsApp dans Clients).`,
         { frequenceJours: freq ? Math.round(freq) : null, clientsEnRetard: s.clients.overdue.length },
       );
     }
     case "dm":
       return done(
-        `Règles qui font répondre (bonnes pratiques) : réponds en moins d'une heure, propose 2 créneaux précis plutôt que « quand tu veux », et finis par une question simple.\n\nExemples prêts à envoyer :\n- Demande de prix : « Salut ! La coupe c'est ${s.services[0] ? Math.round(s.services[0].priceCents / 100) : "XX"} CHF${s.services[1] ? `, ${s.services[1].name.toLowerCase()} ${Math.round(s.services[1].priceCents / 100)} CHF` : ""}. J'ai de la place jeudi 17h ou samedi 10h, je te réserve lequel ? »\n- Client perdu de vue : « Ça fait un moment ! Je t'ai gardé un créneau samedi matin si tu veux, dis-moi. »\n- Après une story : « Merci pour ta réponse ! Tu veux que je te bloque la place ? »`,
+        `Règles qui font répondre (bonnes pratiques) : réponds en moins d'une heure, propose 2 créneaux précis plutôt que « quand tu veux », et finis par une question simple.\n\nExemples prêts à envoyer :\n- Demande de prix : « Salut ! La coupe c'est ${s.services[0] ? Math.round(s.services[0].priceCents / 100) : "XX"} CHF${s.services[1] ? `, ${s.services[1].name.toLowerCase()} ${Math.round(s.services[1].priceCents / 100)} CHF` : ""}. J'ai de la place [jour heure] ou [jour heure], je te réserve lequel ? »\n- Client perdu de vue : « Ça fait un moment ! Je peux te garder un créneau [jour heure] si tu veux, dis-moi. »\n- Après une story : « Merci pour ta réponse ! Tu veux que je te bloque la place ? »`,
         {},
       );
     case "stories":
